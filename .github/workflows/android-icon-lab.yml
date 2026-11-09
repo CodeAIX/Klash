@@ -1,0 +1,29 @@
+name: Android Icon Lab APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [test/android-status-icon]
+    paths:
+      - 'tools/android-status-icon-test/**'
+      - '.github/workflows/android-icon-lab.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build standalone debug APK
+        working-directory: tools/android-status-icon-test
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KlashIconLab-debug-apk
+          path: tools/android-status-icon-test/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
