@@ -1,10 +1,23 @@
 import AppKit
+#if arch(x86_64)
+import CoreGraphics
+#endif
 
 final class TrayMenu: NSMenu, NSMenuDelegate {
     private let onSelect: (Int) -> Void
     private let onClose: (() -> Void)?
     private var accessories: [Int: Int] = [:]
     private var contents: [TrayMenuItemView.Content?] = []
+    #if arch(x86_64)
+    private var monitorTap: CFMachPort?
+    private var monitorSource: CFRunLoopSource?
+    private weak var pressedMonitor: TrayMenuItemView?
+
+    deinit {
+        if let monitorSource { CFRunLoopSourceInvalidate(monitorSource) }
+        if let monitorTap { CFMachPortInvalidate(monitorTap) }
+    }
+    #endif
 
     init(items: [[String: Any]], onSelect: @escaping (Int) -> Void, onClose: (() -> Void)? = nil) {
         self.onSelect = onSelect
@@ -111,8 +124,57 @@ final class TrayMenu: NSMenu, NSMenuDelegate {
     }
 
     func menuDidClose(_ menu: NSMenu) {
+        #if arch(x86_64)
+        if let monitorSource { CFRunLoopSourceInvalidate(monitorSource) }
+        if let monitorTap { CFMachPortInvalidate(monitorTap) }
+        monitorSource = nil
+        monitorTap = nil
+        pressedMonitor = nil
+        #endif
         onClose?()
     }
+
+    #if arch(x86_64)
+    func menuWillOpen(_ menu: NSMenu) {
+        if #available(macOS 14, *) { return }
+        guard supermenu == nil, monitorTap == nil,
+              items.contains(where: { $0.hasSubmenu && $0.isEnabled && accessories[$0.tag] != nil }) else {
+            return
+        }
+        // Ventura can withhold parent-row clicks while AppKit tracks the submenu.
+        let mask = (CGEventMask(1) << CGEventType.leftMouseDown.rawValue)
+            | (CGEventMask(1) << CGEventType.leftMouseUp.rawValue)
+        guard let tap = CGEvent.tapCreateForPid(
+            pid: getpid(), place: .headInsertEventTap, options: .listenOnly,
+            eventsOfInterest: mask, callback: { _, type, event, context in
+                if let context {
+                    let menu = Unmanaged<TrayMenu>.fromOpaque(context).takeUnretainedValue()
+                    menu.handleMonitorClick(type, event: event)
+                }
+                return Unmanaged.passUnretained(event)
+            }, userInfo: Unmanaged.passUnretained(self).toOpaque()
+        ), let source = CFMachPortCreateRunLoopSource(nil, tap, 0) else { return }
+        monitorTap = tap
+        monitorSource = source
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, CFRunLoopMode(rawValue: RunLoop.Mode.eventTracking.rawValue as CFString))
+    }
+
+    private func handleMonitorClick(_ type: CGEventType, event: CGEvent) {
+        guard type == .leftMouseDown || type == .leftMouseUp else { return }
+        let point = event.unflippedLocation
+        if type == .leftMouseDown {
+            pressedMonitor = items.lazy.compactMap { $0.view as? TrayMenuItemView }
+                .first { $0.hitsSubmenuMonitor(at: point) }
+        } else {
+            let pressed = pressedMonitor
+            pressedMonitor = nil
+            if let pressed, pressed.hitsSubmenuMonitor(at: point) {
+                pressed.selectAccessory()
+            }
+        }
+    }
+    #endif
 
     @objc private func didSelectItem(_ sender: NSMenuItem) {
         onSelect(sender.tag)

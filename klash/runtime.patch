@@ -9064,18 +9064,34 @@ index 0000000000000000000000000000000000000000..39f1c7e0d85dca5e80d010417522b390
 +    }
 +}
 diff --git a/plugins/tray/macos/tray/Sources/tray/TrayMenu.swift b/plugins/tray/macos/tray/Sources/tray/TrayMenu.swift
-index 2a24bfc8058fd18ca3744ae58e424bd792444173..2c8af356dc684c2da36af6ae95026ce63b368830 100644
+index 2a24bfc8058fd18ca3744ae58e424bd792444173..c6409e0c2c4412831d00799557c66d343e21d60d 100644
 --- a/plugins/tray/macos/tray/Sources/tray/TrayMenu.swift
 +++ b/plugins/tray/macos/tray/Sources/tray/TrayMenu.swift
-@@ -3,6 +3,7 @@ import AppKit
+@@ -1,9 +1,23 @@
+ import AppKit
++#if arch(x86_64)
++import CoreGraphics
++#endif
+ 
  final class TrayMenu: NSMenu, NSMenuDelegate {
      private let onSelect: (Int) -> Void
      private let onClose: (() -> Void)?
 +    private var accessories: [Int: Int] = [:]
      private var contents: [TrayMenuItemView.Content?] = []
++    #if arch(x86_64)
++    private var monitorTap: CFMachPort?
++    private var monitorSource: CFRunLoopSource?
++    private weak var pressedMonitor: TrayMenuItemView?
++
++    deinit {
++        if let monitorSource { CFRunLoopSourceInvalidate(monitorSource) }
++        if let monitorTap { CFMachPortInvalidate(monitorTap) }
++    }
++    #endif
  
      init(items: [[String: Any]], onSelect: @escaping (Int) -> Void, onClose: (() -> Void)? = nil) {
-@@ -38,6 +39,19 @@ final class TrayMenu: NSMenu, NSMenuDelegate {
+         self.onSelect = onSelect
+@@ -38,6 +52,19 @@ final class TrayMenu: NSMenu, NSMenuDelegate {
          let item = NSMenuItem()
          item.title = entry["label"] as? String ?? ""
          item.tag = entry["id"] as? Int ?? 0
@@ -9095,7 +9111,7 @@ index 2a24bfc8058fd18ca3744ae58e424bd792444173..2c8af356dc684c2da36af6ae95026ce6
          item.isEnabled = entry["enabled"] as? Bool ?? true
          item.state = type == "checkbox" && entry["checked"] as? Bool == true ? .on : .off
  
-@@ -57,7 +71,11 @@ final class TrayMenu: NSMenu, NSMenuDelegate {
+@@ -57,7 +84,11 @@ final class TrayMenu: NSMenu, NSMenuDelegate {
              detail: detail(entry),
              checked: item.state == .on,
              enabled: item.isEnabled,
@@ -9108,7 +9124,7 @@ index 2a24bfc8058fd18ca3744ae58e424bd792444173..2c8af356dc684c2da36af6ae95026ce6
          )
      }
  
-@@ -68,12 +86,24 @@ final class TrayMenu: NSMenu, NSMenuDelegate {
+@@ -68,12 +99,24 @@ final class TrayMenu: NSMenu, NSMenuDelegate {
          }
          for (item, content) in zip(items, contents) {
              if let content = content {
@@ -9134,8 +9150,67 @@ index 2a24bfc8058fd18ca3744ae58e424bd792444173..2c8af356dc684c2da36af6ae95026ce6
      // AppKit does not redraw an item's view when its highlight changes.
      func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
          highlightedItem?.view?.needsDisplay = true
+@@ -81,9 +124,58 @@ final class TrayMenu: NSMenu, NSMenuDelegate {
+     }
+ 
+     func menuDidClose(_ menu: NSMenu) {
++        #if arch(x86_64)
++        if let monitorSource { CFRunLoopSourceInvalidate(monitorSource) }
++        if let monitorTap { CFMachPortInvalidate(monitorTap) }
++        monitorSource = nil
++        monitorTap = nil
++        pressedMonitor = nil
++        #endif
+         onClose?()
+     }
+ 
++    #if arch(x86_64)
++    func menuWillOpen(_ menu: NSMenu) {
++        if #available(macOS 14, *) { return }
++        guard supermenu == nil, monitorTap == nil,
++              items.contains(where: { $0.hasSubmenu && $0.isEnabled && accessories[$0.tag] != nil }) else {
++            return
++        }
++        // Ventura can withhold parent-row clicks while AppKit tracks the submenu.
++        let mask = (CGEventMask(1) << CGEventType.leftMouseDown.rawValue)
++            | (CGEventMask(1) << CGEventType.leftMouseUp.rawValue)
++        guard let tap = CGEvent.tapCreateForPid(
++            pid: getpid(), place: .headInsertEventTap, options: .listenOnly,
++            eventsOfInterest: mask, callback: { _, type, event, context in
++                if let context {
++                    let menu = Unmanaged<TrayMenu>.fromOpaque(context).takeUnretainedValue()
++                    menu.handleMonitorClick(type, event: event)
++                }
++                return Unmanaged.passUnretained(event)
++            }, userInfo: Unmanaged.passUnretained(self).toOpaque()
++        ), let source = CFMachPortCreateRunLoopSource(nil, tap, 0) else { return }
++        monitorTap = tap
++        monitorSource = source
++        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
++        CFRunLoopAddSource(CFRunLoopGetMain(), source, CFRunLoopMode(rawValue: RunLoop.Mode.eventTracking.rawValue as CFString))
++    }
++
++    private func handleMonitorClick(_ type: CGEventType, event: CGEvent) {
++        guard type == .leftMouseDown || type == .leftMouseUp else { return }
++        let point = event.unflippedLocation
++        if type == .leftMouseDown {
++            pressedMonitor = items.lazy.compactMap { $0.view as? TrayMenuItemView }
++                .first { $0.hitsSubmenuMonitor(at: point) }
++        } else {
++            let pressed = pressedMonitor
++            pressedMonitor = nil
++            if let pressed, pressed.hitsSubmenuMonitor(at: point) {
++                pressed.selectAccessory()
++            }
++        }
++    }
++    #endif
++
+     @objc private func didSelectItem(_ sender: NSMenuItem) {
+         onSelect(sender.tag)
+     }
 diff --git a/plugins/tray/macos/tray/Sources/tray/TrayMenuItemView.swift b/plugins/tray/macos/tray/Sources/tray/TrayMenuItemView.swift
-index e5f4ae3814a41505300b3dba502c1f58ac82860b..71fb45c72487d3a9fd4bd5aa79cf9c555b6a2de6 100644
+index e5f4ae3814a41505300b3dba502c1f58ac82860b..79ad394c741e2cee47c7b272fe77795fec945c8b 100644
 --- a/plugins/tray/macos/tray/Sources/tray/TrayMenuItemView.swift
 +++ b/plugins/tray/macos/tray/Sources/tray/TrayMenuItemView.swift
 @@ -4,12 +4,19 @@ import AppKit
@@ -9199,7 +9274,7 @@ index e5f4ae3814a41505300b3dba502c1f58ac82860b..71fb45c72487d3a9fd4bd5aa79cf9c55
      }
  
      required init?(coder: NSCoder) {
-@@ -130,10 +155,20 @@ final class TrayMenuItemView: NSView {
+@@ -130,10 +155,27 @@ final class TrayMenuItemView: NSView {
              trailingX -= detailWidth + TrayMenuItemView.detailGap
          }
  
@@ -9212,6 +9287,13 @@ index e5f4ae3814a41505300b3dba502c1f58ac82860b..71fb45c72487d3a9fd4bd5aa79cf9c55
          drawText(content.label, x: metrics.titleX, width: trailingX - metrics.titleX, color: primary, font: metrics.font)
      }
  
++    #if arch(x86_64)
++    // AppKit can ask for click-through while the status menu window is inactive.
++    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
++        content.enabled && !content.hasSubmenu
++    }
++    #endif
++
      override func mouseUp(with event: NSEvent) {
 +        if content.enabled, let button = accessoryButton, button.frame.contains(convert(event.locationInWindow, from: nil)) {
 +            selectAccessory()
@@ -9220,7 +9302,7 @@ index e5f4ae3814a41505300b3dba502c1f58ac82860b..71fb45c72487d3a9fd4bd5aa79cf9c55
          guard content.enabled, !content.hasSubmenu, let item = enclosingMenuItem,
                let action = item.action else {
              return
-@@ -146,6 +181,40 @@ final class TrayMenuItemView: NSView {
+@@ -146,6 +188,49 @@ final class TrayMenuItemView: NSView {
          NSApp.sendAction(action, to: item.target, from: item)
      }
  
@@ -9230,7 +9312,16 @@ index e5f4ae3814a41505300b3dba502c1f58ac82860b..71fb45c72487d3a9fd4bd5aa79cf9c55
 +        return true
 +    }
 +
-+    @objc private func selectAccessory() {
++    #if arch(x86_64)
++    func hitsSubmenuMonitor(at screenPoint: NSPoint) -> Bool {
++        guard content.enabled, content.hasSubmenu, let window, window.isVisible,
++              let button = accessoryButton, button.alphaValue > 0 else { return false }
++        let point = convert(window.convertPoint(fromScreen: screenPoint), from: nil)
++        return visibleRect.contains(point) && button.frame.contains(point)
++    }
++    #endif
++
++    @objc func selectAccessory() {
 +        guard content.enabled, let accessory = content.accessory else { return }
 +        var root = enclosingMenuItem?.menu
 +        while let parent = root?.supermenu { root = parent }
