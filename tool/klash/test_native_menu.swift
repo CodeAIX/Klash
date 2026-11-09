@@ -11,6 +11,14 @@ menu.menuNeedsUpdate(menu)
 let child = menu.items[0].submenu as! TrayMenu
 child.menuNeedsUpdate(child)
 let views = [menu.items[0].view!, child.items[0].view!, menu.items[1].view!]
+precondition(!views[0].acceptsFirstMouse(for: nil))
+#if arch(x86_64)
+precondition(views[1].acceptsFirstMouse(for: nil))
+precondition(views[2].acceptsFirstMouse(for: nil))
+#else
+precondition(!views[1].acceptsFirstMouse(for: nil))
+precondition(!views[2].acceptsFirstMouse(for: nil))
+#endif
 for (index, view) in views.enumerated() {
     let image = NSImage(size:view.frame.size)
     image.lockFocus()
@@ -28,4 +36,5 @@ precondition(menu.items[0].hasSubmenu && child.items[0].state == .on)
 let node = menu.items[1]
 NSApp.sendAction(node.action!, to: node.target, from: node)
 precondition(received.last == 104)
+
 print("PASS: group/subgroup/node accessory controls, geometry, accessibility and independent primary selection")

@@ -164,6 +164,13 @@ final class TrayMenuItemView: NSView {
         drawText(content.label, x: metrics.titleX, width: trailingX - metrics.titleX, color: primary, font: metrics.font)
     }
 
+    #if arch(x86_64)
+    // AppKit can ask for click-through while the status menu window is inactive.
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        content.enabled && !content.hasSubmenu
+    }
+    #endif
+
     override func mouseUp(with event: NSEvent) {
         if content.enabled, let button = accessoryButton, button.frame.contains(convert(event.locationInWindow, from: nil)) {
             selectAccessory()
@@ -187,7 +194,16 @@ final class TrayMenuItemView: NSView {
         return true
     }
 
-    @objc private func selectAccessory() {
+    #if arch(x86_64)
+    func hitsSubmenuMonitor(at screenPoint: NSPoint) -> Bool {
+        guard content.enabled, content.hasSubmenu, let window, window.isVisible,
+              let button = accessoryButton, button.alphaValue > 0 else { return false }
+        let point = convert(window.convertPoint(fromScreen: screenPoint), from: nil)
+        return visibleRect.contains(point) && button.frame.contains(point)
+    }
+    #endif
+
+    @objc func selectAccessory() {
         guard content.enabled, let accessory = content.accessory else { return }
         var root = enclosingMenuItem?.menu
         while let parent = root?.supermenu { root = parent }
