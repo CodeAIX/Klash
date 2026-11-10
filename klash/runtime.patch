@@ -2238,6 +2238,23 @@ index 77ef5f03ed7cbc5b5a20fea13cae5af5a26a88e3..7be512d8b21119e80e34c926156d5179
              checked: selectedName == proxy.name,
              detail: _delayText(delays[proxy.name]),
              onSelected: () {
+diff --git a/lib/common/window.dart b/lib/common/window.dart
+index 2c54458358d5befa1392f496fe80271d62bd5f26..23d18355ca4b10b1ba3ab364fbf9e577153802b0 100755
+--- a/lib/common/window.dart
++++ b/lib/common/window.dart
+@@ -199,7 +199,11 @@ class Window implements WindowPort {
+   }
+ 
+   Future<void> _hideWindow() async {
+-    await desktopWindow.hide();
++    if (system.isMacOS) {
++      await desktopWindow.hideForTray();
++    } else {
++      await desktopWindow.hide();
++    }
+   }
+ 
+   Future<bool> _isWindowVisible() async {
 diff --git a/lib/l10n/intl/messages_en.dart b/lib/l10n/intl/messages_en.dart
 index 4cbb954bb65297ee89ec8933c01a5e5836e118fa..1e1d8c9de3fca3782b309269a77ddb2d64c372d4 100644
 --- a/lib/l10n/intl/messages_en.dart
@@ -9454,6 +9471,207 @@ index da7dd95371d5175663510442e27160f72ee3895b..fbcb3633b902a1d7bae30de5089e7f86
    test('variant assets follow the Flutter resolution layout', () {
      expect(Tray.variantAsset(_asset, 1.0), _asset);
      expect(
+diff --git a/plugins/window/lib/src/desktop_window.dart b/plugins/window/lib/src/desktop_window.dart
+index bb8ebc9143eef2beb566968f30dc88edc2d3123e..e0c2185c7b38037aa15fb16d08022d768f586a52 100644
+--- a/plugins/window/lib/src/desktop_window.dart
++++ b/plugins/window/lib/src/desktop_window.dart
+@@ -109,6 +109,8 @@ class DesktopWindow {
+ 
+   Future<void> hide() => _call('hide');
+ 
++  Future<void> hideForTray() => _call('hideForTray');
++
+   Future<bool> isVisible() => _invoke<bool>('isVisible');
+ 
+   Future<void> focus() => _call('focus');
+diff --git a/plugins/window/macos/window/Sources/window/WindowController.swift b/plugins/window/macos/window/Sources/window/WindowController.swift
+index c56b490566d6d0996cfa55f58a92dbbb1d019ba2..bde3ed310b2faa5d4c8b88cd1d10f7a7c44422cc 100644
+--- a/plugins/window/macos/window/Sources/window/WindowController.swift
++++ b/plugins/window/macos/window/Sources/window/WindowController.swift
+@@ -10,6 +10,9 @@ final class WindowController: NSObject, NSWindowDelegate {
+     private var style = WindowStyle()
+     private var wasZoomed = false
+     private var geometrySettle: DispatchWorkItem?
++    private enum TrayVisibility { case normal, hiding, hidden }
++    private var trayVisibility = TrayVisibility.normal
++    private var trayHandoffCheck: DispatchWorkItem?
+ 
+     private static let geometrySettleDelay: DispatchTimeInterval = .milliseconds(150)
+ 
+@@ -29,9 +32,26 @@ final class WindowController: NSObject, NSWindowDelegate {
+         return window
+     }
+ 
+-    func show(inactive: Bool) throws {
++    @MainActor
++    func show(inactive: Bool) async throws {
+         let window = try requireWindow()
+-        let wasVisible = window.isVisible
++        let wasVisible = trayVisibility == .normal && window.isVisible
++        trayHandoffCheck?.cancel()
++        trayHandoffCheck = nil
++        if trayVisibility != .normal {
++            let deadline = DispatchTime.now() + 1.5
++            while trayVisibility == .hiding || (NSApp.isHidden && NSApp.isActive) {
++                guard DispatchTime.now() < deadline else { break }
++                try await Task.sleep(nanoseconds: 20_000_000)
++            }
++            trayVisibility = .normal
++            if !inactive {
++                NSApp.setActivationPolicy(.regular)
++            }
++            if NSApp.isHidden {
++                NSApp.unhideWithoutActivation()
++            }
++        }
+         if inactive {
+             window.orderFront(nil)
+         } else {
+@@ -53,8 +73,34 @@ final class WindowController: NSObject, NSWindowDelegate {
+         }
+     }
+ 
++    func hideForTray() throws {
++        let window = try requireWindow()
++        guard trayVisibility == .normal else { return }
++        guard window.isVisible, !hasOtherVisibleWindow(besides: window),
++              NSApp.isActive, NSWorkspace.shared.menuBarOwningApplication?.processIdentifier ==
++                ProcessInfo.processInfo.processIdentifier else {
++            try hide()
++            return
++        }
++        trayVisibility = .hiding
++        NSApp.hide(nil)
++    }
++
++    func applicationDidHide() {
++        guard trayVisibility == .hiding else { return }
++        trayVisibility = .hidden
++        emit("hide")
++    }
++
+     func isVisible() throws -> Bool {
+-        try requireWindow().isVisible
++        let window = try requireWindow()
++        return trayVisibility == .normal && window.isVisible
++    }
++
++    private func hasOtherVisibleWindow(besides window: NSWindow) -> Bool {
++        window.attachedSheet != nil || NSApp.windows.contains {
++            $0 !== window && $0.isVisible && ($0.canBecomeKey || $0.canBecomeMain)
++        }
+     }
+ 
+     func focus() throws {
+@@ -175,8 +221,31 @@ final class WindowController: NSObject, NSWindowDelegate {
+     }
+ 
+     func setSkipTaskbar(_ value: Bool) throws {
+-        _ = try requireWindow()
+-        NSApplication.shared.setActivationPolicy(value ? .accessory : .regular)
++        let window = try requireWindow()
++        if !value {
++            NSApp.setActivationPolicy(.regular)
++        } else if trayVisibility != .normal {
++            requestAccessoryAfterHandoff(until: .now() + 1.5)
++        } else if !hasOtherVisibleWindow(besides: window) {
++            NSApp.setActivationPolicy(.accessory)
++        }
++    }
++
++    private func requestAccessoryAfterHandoff(until deadline: DispatchTime) {
++        trayHandoffCheck?.cancel()
++        trayHandoffCheck = nil
++        guard trayVisibility != .normal, DispatchTime.now() < deadline else { return }
++        if NSApp.isHidden, !NSApp.isActive, window?.isVisible == false,
++           let owner = NSWorkspace.shared.menuBarOwningApplication,
++           owner.processIdentifier != ProcessInfo.processInfo.processIdentifier {
++            NSApp.setActivationPolicy(.accessory)
++            return
++        }
++        let check = DispatchWorkItem { [weak self] in
++            self?.requestAccessoryAfterHandoff(until: deadline)
++        }
++        trayHandoffCheck = check
++        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(20), execute: check)
+     }
+ 
+     func setRoundedCorners(_ value: Bool) throws {
+diff --git a/plugins/window/macos/window/Sources/window/WindowPlugin.swift b/plugins/window/macos/window/Sources/window/WindowPlugin.swift
+index 43eaeedef94a51a9b16d5c4432f13d2dd99247a5..ec096269a0e522804e315809f83466c506c5c885 100644
+--- a/plugins/window/macos/window/Sources/window/WindowPlugin.swift
++++ b/plugins/window/macos/window/Sources/window/WindowPlugin.swift
+@@ -51,6 +51,9 @@ public class WindowPlugin: NSObject, FlutterPlugin {
+                 plugin, selector: #selector(applicationActivityChanged), name: name, object: nil
+             )
+         }
++        NotificationCenter.default.addObserver(
++            plugin, selector: #selector(applicationDidHide), name: NSApplication.didHideNotification, object: nil
++        )
+         WindowPlugin.instance = plugin
+         registrar.addMethodCallDelegate(plugin, channel: channel)
+     }
+@@ -67,17 +70,35 @@ public class WindowPlugin: NSObject, FlutterPlugin {
+ 
+     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+         let arguments = Arguments((call.arguments as? [String: Any]) ?? [:])
++        if call.method == "show" {
++            Task { @MainActor in
++                do {
++                    try await controller.show(inactive: arguments.bool("inactive"))
++                    result(nil)
++                } catch {
++                    reply(with: error, to: result)
++                }
++            }
++            return
++        }
+         guard let handler = handlers[call.method] else {
+             result(FlutterMethodNotImplemented)
+             return
+         }
+         do {
+             result(try handler(arguments))
+-        } catch let error as ArgumentError {
+-            result(FlutterError(code: "bad_args", message: "\(call.method): \(error.key)", details: nil))
+-        } catch let error as PluginError {
+-            result(FlutterError(code: error.code, message: error.message, details: nil))
+         } catch {
++            reply(with: error, to: result)
++        }
++    }
++
++    private func reply(with error: Error, to result: FlutterResult) {
++        switch error {
++        case let error as ArgumentError:
++            result(FlutterError(code: "bad_args", message: "Invalid argument: \(error.key)", details: nil))
++        case let error as PluginError:
++            result(FlutterError(code: error.code, message: error.message, details: nil))
++        default:
+             result(FlutterError(code: "unsupported", message: "\(error)", details: nil))
+         }
+     }
+@@ -109,6 +130,10 @@ public class WindowPlugin: NSObject, FlutterPlugin {
+         lifecycle?.sendMessage(active ? "AppLifecycleState.resumed" : "AppLifecycleState.inactive")
+     }
+ 
++    @objc private func applicationDidHide(_ notification: Notification) {
++        controller.applicationDidHide()
++    }
++
+     private func emit(_ name: String) {
+         channel?.invokeMethod("onEvent", arguments: ["name": name])
+     }
+@@ -117,8 +142,8 @@ public class WindowPlugin: NSObject, FlutterPlugin {
+         let controller = self.controller
+ 
+         var handlers: [String: (Arguments) throws -> Any?] = [
+-            "show": { args in try controller.show(inactive: args.bool("inactive")); return nil },
+             "hide": { _ in try controller.hide(); return nil },
++            "hideForTray": { _ in try controller.hideForTray(); return nil },
+             "isVisible": { _ in try controller.isVisible() },
+             "focus": { _ in try controller.focus(); return nil },
+             "close": { _ in try controller.close(); return nil },
 diff --git a/test/common/dav_client_test.dart b/test/common/dav_client_test.dart
 index 78825c3794bcd17edcfe5dd935d7b6a2308148ab..a3e9dda85bf64ebe267f93115d09089d5ee4ee6c 100644
 --- a/test/common/dav_client_test.dart
@@ -10048,6 +10266,37 @@ index 08404809b339dd664f0706a95104e03cb563e3d3..0e442cbb32c9aa6cd8c80ab0e2ec5145
      expect(items[index + 1]['label'], HotAction.delayTest.label);
      expect(items[index + 1]['detail'], '⌃⇧D');
    });
+diff --git a/test/common/window_test.dart b/test/common/window_test.dart
+index e83c7025819c571f2aa0e24e68b0d38b1e1a0616..27a78529b60c53cd5a6623463f24c6df82dc2265 100644
+--- a/test/common/window_test.dart
++++ b/test/common/window_test.dart
+@@ -8,6 +8,8 @@ import 'package:screen_retriever/screen_retriever.dart';
+ 
+ const _windowChannel = MethodChannel('window');
+ 
++String get _hideMethod => Platform.isMacOS ? 'hideForTray' : 'hide';
++
+ void main() {
+   TestWidgetsFlutterBinding.ensureInitialized();
+ 
+@@ -72,7 +74,7 @@ void main() {
+   test('hide drops the window off the taskbar', () async {
+     await Window().hide();
+ 
+-    expect(calls, containsAllInOrder(<String>['hide', 'setSkipTaskbar']));
++    expect(calls, containsAllInOrder(<String>[_hideMethod, 'setSkipTaskbar']));
+   });
+ 
+   // Runs before any probe succeeds: the singleton caches a supported effect.
+@@ -170,7 +172,7 @@ void main() {
+ 
+     expect(
+       calls,
+-      containsAllInOrder(<String>['isVisible', 'hide', 'setSkipTaskbar']),
++      containsAllInOrder(<String>['isVisible', _hideMethod, 'setSkipTaskbar']),
+     );
+ 
+     calls.clear();
 diff --git a/test/manager/tray_manager_test.dart b/test/manager/tray_manager_test.dart
 index eeedbf0f9ebabbc85ed7521999733139f6ae4ff9..f7af0aac9a2abbb0dbcf9d70bbd7b95951583c17 100644
 --- a/test/manager/tray_manager_test.dart
