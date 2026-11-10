@@ -1,7 +1,7 @@
 name: fl_clash
 description: Klash, an unofficial FlClash derivative with macOS exit monitoring and status icons.
 publish_to: 'none'
-version: 1.9.3+2026111001
+version: 1.9.3+2026111003
 environment:
   sdk: '>=3.10.0 <4.0.0'
 
