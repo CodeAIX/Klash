@@ -199,7 +199,11 @@ class Window implements WindowPort {
   }
 
   Future<void> _hideWindow() async {
-    await desktopWindow.hide();
+    if (system.isMacOS) {
+      await desktopWindow.hideForTray();
+    } else {
+      await desktopWindow.hide();
+    }
   }
 
   Future<bool> _isWindowVisible() async {

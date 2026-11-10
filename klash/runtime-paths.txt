@@ -12,6 +12,7 @@ lib/common/klash_monitor.dart
 lib/common/protocol.dart
 lib/common/request.dart
 lib/common/tray.dart
+lib/common/window.dart
 lib/l10n/intl/messages_en.dart
 lib/l10n/intl/messages_es.dart
 lib/l10n/intl/messages_fr.dart
@@ -50,10 +51,14 @@ plugins/tray/macos/tray/Sources/tray/TrayMenuItemView.swift
 plugins/tray/macos/tray/Sources/tray/TrayPlugin.swift
 plugins/tray/test/tray_codec_test.dart
 plugins/tray/test/tray_icon_test.dart
+plugins/window/lib/src/desktop_window.dart
+plugins/window/macos/window/Sources/window/WindowController.swift
+plugins/window/macos/window/Sources/window/WindowPlugin.swift
 test/common/dav_client_test.dart
 test/common/klash_monitor_test.dart
 test/common/protocol_test.dart
 test/common/request_test.dart
 test/common/tray_menu_test.dart
+test/common/window_test.dart
 test/manager/tray_manager_test.dart
 test/providers/route_state_test.dart

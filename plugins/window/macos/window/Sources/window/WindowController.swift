@@ -10,6 +10,9 @@ final class WindowController: NSObject, NSWindowDelegate {
     private var style = WindowStyle()
     private var wasZoomed = false
     private var geometrySettle: DispatchWorkItem?
+    private enum TrayVisibility { case normal, hiding, hidden }
+    private var trayVisibility = TrayVisibility.normal
+    private var trayHandoffCheck: DispatchWorkItem?
 
     private static let geometrySettleDelay: DispatchTimeInterval = .milliseconds(150)
 
@@ -29,9 +32,26 @@ final class WindowController: NSObject, NSWindowDelegate {
         return window
     }
 
-    func show(inactive: Bool) throws {
+    @MainActor
+    func show(inactive: Bool) async throws {
         let window = try requireWindow()
-        let wasVisible = window.isVisible
+        let wasVisible = trayVisibility == .normal && window.isVisible
+        trayHandoffCheck?.cancel()
+        trayHandoffCheck = nil
+        if trayVisibility != .normal {
+            let deadline = DispatchTime.now() + 1.5
+            while trayVisibility == .hiding || (NSApp.isHidden && NSApp.isActive) {
+                guard DispatchTime.now() < deadline else { break }
+                try await Task.sleep(nanoseconds: 20_000_000)
+            }
+            trayVisibility = .normal
+            if !inactive {
+                NSApp.setActivationPolicy(.regular)
+            }
+            if NSApp.isHidden {
+                NSApp.unhideWithoutActivation()
+            }
+        }
         if inactive {
             window.orderFront(nil)
         } else {
@@ -53,8 +73,34 @@ final class WindowController: NSObject, NSWindowDelegate {
         }
     }
 
+    func hideForTray() throws {
+        let window = try requireWindow()
+        guard trayVisibility == .normal else { return }
+        guard window.isVisible, !hasOtherVisibleWindow(besides: window),
+              NSApp.isActive, NSWorkspace.shared.menuBarOwningApplication?.processIdentifier ==
+                ProcessInfo.processInfo.processIdentifier else {
+            try hide()
+            return
+        }
+        trayVisibility = .hiding
+        NSApp.hide(nil)
+    }
+
+    func applicationDidHide() {
+        guard trayVisibility == .hiding else { return }
+        trayVisibility = .hidden
+        emit("hide")
+    }
+
     func isVisible() throws -> Bool {
-        try requireWindow().isVisible
+        let window = try requireWindow()
+        return trayVisibility == .normal && window.isVisible
+    }
+
+    private func hasOtherVisibleWindow(besides window: NSWindow) -> Bool {
+        window.attachedSheet != nil || NSApp.windows.contains {
+            $0 !== window && $0.isVisible && ($0.canBecomeKey || $0.canBecomeMain)
+        }
     }
 
     func focus() throws {
@@ -175,8 +221,31 @@ final class WindowController: NSObject, NSWindowDelegate {
     }
 
     func setSkipTaskbar(_ value: Bool) throws {
-        _ = try requireWindow()
-        NSApplication.shared.setActivationPolicy(value ? .accessory : .regular)
+        let window = try requireWindow()
+        if !value {
+            NSApp.setActivationPolicy(.regular)
+        } else if trayVisibility != .normal {
+            requestAccessoryAfterHandoff(until: .now() + 1.5)
+        } else if !hasOtherVisibleWindow(besides: window) {
+            NSApp.setActivationPolicy(.accessory)
+        }
+    }
+
+    private func requestAccessoryAfterHandoff(until deadline: DispatchTime) {
+        trayHandoffCheck?.cancel()
+        trayHandoffCheck = nil
+        guard trayVisibility != .normal, DispatchTime.now() < deadline else { return }
+        if NSApp.isHidden, !NSApp.isActive, window?.isVisible == false,
+           let owner = NSWorkspace.shared.menuBarOwningApplication,
+           owner.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+            NSApp.setActivationPolicy(.accessory)
+            return
+        }
+        let check = DispatchWorkItem { [weak self] in
+            self?.requestAccessoryAfterHandoff(until: deadline)
+        }
+        trayHandoffCheck = check
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(20), execute: check)
     }
 
     func setRoundedCorners(_ value: Bool) throws {

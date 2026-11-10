@@ -8,6 +8,8 @@ import 'package:screen_retriever/screen_retriever.dart';
 
 const _windowChannel = MethodChannel('window');
 
+String get _hideMethod => Platform.isMacOS ? 'hideForTray' : 'hide';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -72,7 +74,7 @@ void main() {
   test('hide drops the window off the taskbar', () async {
     await Window().hide();
 
-    expect(calls, containsAllInOrder(<String>['hide', 'setSkipTaskbar']));
+    expect(calls, containsAllInOrder(<String>[_hideMethod, 'setSkipTaskbar']));
   });
 
   // Runs before any probe succeeds: the singleton caches a supported effect.
@@ -170,7 +172,7 @@ void main() {
 
     expect(
       calls,
-      containsAllInOrder(<String>['isVisible', 'hide', 'setSkipTaskbar']),
+      containsAllInOrder(<String>['isVisible', _hideMethod, 'setSkipTaskbar']),
     );
 
     calls.clear();

@@ -51,6 +51,9 @@ public class WindowPlugin: NSObject, FlutterPlugin {
                 plugin, selector: #selector(applicationActivityChanged), name: name, object: nil
             )
         }
+        NotificationCenter.default.addObserver(
+            plugin, selector: #selector(applicationDidHide), name: NSApplication.didHideNotification, object: nil
+        )
         WindowPlugin.instance = plugin
         registrar.addMethodCallDelegate(plugin, channel: channel)
     }
@@ -67,17 +70,35 @@ public class WindowPlugin: NSObject, FlutterPlugin {
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         let arguments = Arguments((call.arguments as? [String: Any]) ?? [:])
+        if call.method == "show" {
+            Task { @MainActor in
+                do {
+                    try await controller.show(inactive: arguments.bool("inactive"))
+                    result(nil)
+                } catch {
+                    reply(with: error, to: result)
+                }
+            }
+            return
+        }
         guard let handler = handlers[call.method] else {
             result(FlutterMethodNotImplemented)
             return
         }
         do {
             result(try handler(arguments))
-        } catch let error as ArgumentError {
-            result(FlutterError(code: "bad_args", message: "\(call.method): \(error.key)", details: nil))
-        } catch let error as PluginError {
-            result(FlutterError(code: error.code, message: error.message, details: nil))
         } catch {
+            reply(with: error, to: result)
+        }
+    }
+
+    private func reply(with error: Error, to result: FlutterResult) {
+        switch error {
+        case let error as ArgumentError:
+            result(FlutterError(code: "bad_args", message: "Invalid argument: \(error.key)", details: nil))
+        case let error as PluginError:
+            result(FlutterError(code: error.code, message: error.message, details: nil))
+        default:
             result(FlutterError(code: "unsupported", message: "\(error)", details: nil))
         }
     }
@@ -109,6 +130,10 @@ public class WindowPlugin: NSObject, FlutterPlugin {
         lifecycle?.sendMessage(active ? "AppLifecycleState.resumed" : "AppLifecycleState.inactive")
     }
 
+    @objc private func applicationDidHide(_ notification: Notification) {
+        controller.applicationDidHide()
+    }
+
     private func emit(_ name: String) {
         channel?.invokeMethod("onEvent", arguments: ["name": name])
     }
@@ -117,8 +142,8 @@ public class WindowPlugin: NSObject, FlutterPlugin {
         let controller = self.controller
 
         var handlers: [String: (Arguments) throws -> Any?] = [
-            "show": { args in try controller.show(inactive: args.bool("inactive")); return nil },
             "hide": { _ in try controller.hide(); return nil },
+            "hideForTray": { _ in try controller.hideForTray(); return nil },
             "isVisible": { _ in try controller.isVisible() },
             "focus": { _ in try controller.focus(); return nil },
             "close": { _ in try controller.close(); return nil },

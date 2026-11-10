@@ -109,6 +109,8 @@ class DesktopWindow {
 
   Future<void> hide() => _call('hide');
 
+  Future<void> hideForTray() => _call('hideForTray');
+
   Future<bool> isVisible() => _invoke<bool>('isVisible');
 
   Future<void> focus() => _call('focus');
