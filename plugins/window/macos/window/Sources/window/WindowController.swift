@@ -55,6 +55,9 @@ final class WindowController: NSObject, NSWindowDelegate {
         if inactive {
             window.orderFront(nil)
         } else {
+            if NSApp.activationPolicy() == .accessory {
+                NSApp.setActivationPolicy(.regular)
+            }
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
         }
