@@ -43,3 +43,6 @@ The unmodified upstream baseline and the Klash candidate both built successfully
 The local release bundle is 1.9.5 (2026112601), com.codeaix.klash, arm64 for both app and Core, with strict deep signature verification. These checks do not include normal-mode installation, real proxy routing, user interaction or long-running acceptance. The CI workflow builds both architectures without publication when dispatched with `publish=false`.
 
 The Flutter release-index URL returned HTTP 404 during preparation, so CI clones the official 3.50.1 tag and verifies commit ae9b586f34a8443573f82ef57c3bf914a908cbf7 before bootstrapping it, matching the SDK used locally.
+
+
+The first Intel CI run exposed a missing Swift runtime search path in the new bridge: its standalone Rust test executable could not load `@rpath/libswiftCore.dylib`. Cargo now adds `/usr/lib/swift` as an LC_RPATH, matching the system Swift runtime, and packaging verifies that path on the native framework. Both architectures must be rebuilt from this corrected candidate before they are treated as the same release candidate.

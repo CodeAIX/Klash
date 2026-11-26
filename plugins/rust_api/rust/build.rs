@@ -61,4 +61,5 @@ fn main() {
     println!("cargo:rustc-link-search=native={}", runtime.display());
     println!("cargo:rustc-link-search=native=/usr/lib/swift");
     println!("cargo:rustc-link-lib=static=KlashNative");
+    println!("cargo:rustc-link-arg=-Wl,-rpath,/usr/lib/swift");
 }

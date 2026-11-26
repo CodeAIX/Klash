@@ -35519,10 +35519,10 @@ index 6dc4c7e8abfeb4f399639e556c22693fe3621b99..3e58f80aa60ef238f41c01f2f216de83
 -serde_json = "1"
 diff --git a/plugins/rust_api/rust/build.rs b/plugins/rust_api/rust/build.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..67b6b3e6ac62c1793d7b0df86457fdded3a3c738
+index 0000000000000000000000000000000000000000..05e2e1b07ad2687d1006c4c69ca6ef1d09fd07b0
 --- /dev/null
 +++ b/plugins/rust_api/rust/build.rs
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,65 @@
 +use std::{env, path::PathBuf, process::Command};
 +
 +fn output(args: &[&str]) -> String {
@@ -35586,6 +35586,7 @@ index 0000000000000000000000000000000000000000..67b6b3e6ac62c1793d7b0df86457fdde
 +    println!("cargo:rustc-link-search=native={}", runtime.display());
 +    println!("cargo:rustc-link-search=native=/usr/lib/swift");
 +    println!("cargo:rustc-link-lib=static=KlashNative");
++    println!("cargo:rustc-link-arg=-Wl,-rpath,/usr/lib/swift");
 +}
 diff --git a/plugins/rust_api/rust/src/api/tray.rs b/plugins/rust_api/rust/src/api/tray.rs
 index 0d50d3ad543621b8a7661e1122bd7ae55f1c1120..34c386755977455564f8c5017f525094c84e483d 100644

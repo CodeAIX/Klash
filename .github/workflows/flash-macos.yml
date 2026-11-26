@@ -124,6 +124,9 @@ jobs:
           test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleDisplayName' "$app/Contents/Info.plist")" = Klash
           lipo "$app/Contents/MacOS/Klash" -verify_arch "$KLASH_ARCH"
           lipo "$app/Contents/MacOS/FlClashCore" -verify_arch "$KLASH_ARCH"
+          rust="$app/Contents/Frameworks/rust_api.framework/Versions/A/rust_api"
+          lipo "$rust" -verify_arch "$KLASH_ARCH"
+          python3 -c "import subprocess,sys; assert b'path /usr/lib/swift ' in subprocess.check_output(['otool','-l',sys.argv[1]])" "$rust"
           cp LICENSE KLASH-NOTICE.md "$app/Contents/Resources/"
           codesign --force --deep --sign - --preserve-metadata=entitlements "$app"
           codesign --force --sign - --entitlements macos/Runner/Release.entitlements "$app"
