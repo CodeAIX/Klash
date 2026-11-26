@@ -256,6 +256,23 @@ void main() {
       },
     );
 
+    test(
+      'a tray watch stays live while hidden and releases on disposal',
+      () async {
+        final container = build();
+        container.read(appVisibleProvider.notifier).value = false;
+        final tracker = trackerOf(container);
+        tracker.attachBackground();
+        await pumpEventQueue();
+        expect(stateOf(container).live, isTrue);
+        verify(() => core.watchRoute(true)).called(greaterThanOrEqualTo(1));
+        tracker.detachBackground();
+        await pumpEventQueue();
+        expect(stateOf(container).live, isFalse);
+        verify(() => core.watchRoute(false)).called(greaterThanOrEqualTo(1));
+      },
+    );
+
     test('a read asked for while one is on the way runs after it', () async {
       final reads = <Completer<RouteSnapshot>>[];
       when(() => core.watchRoute(true)).thenAnswer((_) {

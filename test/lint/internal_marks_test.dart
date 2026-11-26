@@ -59,6 +59,7 @@ String? _kind(String word) {
 
 bool _skipped(String path) =>
     path == _self ||
+    path == 'klash/runtime.patch' ||
     path.contains('/vendor/') ||
     path.endsWith('.lock') ||
     path.endsWith('.g.dart') ||

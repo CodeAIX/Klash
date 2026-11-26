@@ -309,10 +309,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get sendFromPhonePermissionDenied =>
-      'Pour recevoir un lien depuis le téléphone, FlClash a besoin de l\'autorisation Appareils à proximité, qui lui donne accès au réseau local. Activez-la dans les paramètres de l\'application.';
+      'Pour recevoir un lien depuis le téléphone, Klash a besoin de l\'autorisation Appareils à proximité, qui lui donne accès au réseau local. Activez-la dans les paramètres de l\'application.';
 
   @override
-  String get sendFromPhonePageTitle => 'Envoyer un lien à FlClash';
+  String get sendFromPhonePageTitle => 'Envoyer un lien à Klash';
 
   @override
   String get sendFromPhonePageHint =>
@@ -331,7 +331,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get shareQrcodeTip =>
-      'Scannez avec FlClash sur un autre appareil pour importer ce profil.';
+      'Scannez avec Klash sur un autre appareil pour importer ce profil.';
 
   @override
   String get qrcodeTooLongTip =>
@@ -1197,7 +1197,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get disclaimerDesc =>
-      'Avant d\'utiliser FlClash (« le Logiciel »), lisez attentivement cette déclaration et assurez-vous de bien la comprendre. Appuyer sur « Accepter » signifie que vous avez lu et compris ce qui suit. Si vous ne souhaitez pas continuer, appuyez sur « Quitter ».';
+      'Avant d\'utiliser Klash (« le Logiciel »), lisez attentivement cette déclaration et assurez-vous de bien la comprendre. Appuyer sur « Accepter » signifie que vous avez lu et compris ce qui suit. Si vous ne souhaitez pas continuer, appuyez sur « Quitter ».';
 
   @override
   String get disclaimerSoftwareTitle => 'Nature du logiciel';
@@ -2192,7 +2192,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get helperCorruptTip =>
-      'Service Helper indisponible ; le mode TUN ne peut pas être activé. Réinstallez FlClash pour le rétablir.';
+      'Service Helper indisponible ; le mode TUN ne peut pas être activé. Réinstallez Klash pour le rétablir.';
 
   @override
   String get tunAuthorizationFailed =>
@@ -2203,12 +2203,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String coreBlockedByPolicyTip(Object code) {
-    return 'Windows a refusé d’exécuter FlClashCore.exe (erreur $code). Une stratégie de contrôle des applications, telle que Smart App Control ou AppLocker, bloque les programmes non signés ; autorisez FlClash dans cette stratégie ou désactivez-la, puis réessayez.';
+    return 'Windows a refusé d’exécuter KlashCore.exe (erreur $code). Une stratégie de contrôle des applications, telle que Smart App Control ou AppLocker, bloque les programmes non signés ; autorisez Klash dans cette stratégie ou désactivez-la, puis réessayez.';
   }
 
   @override
   String get coreBlockedBySmartAppControlTip =>
-      'Windows Smart App Control a bloqué FlClashCore.exe car il n’est pas signé. Ouvrez Sécurité Windows → Contrôle des applications et du navigateur → Paramètres de Smart App Control, choisissez Désactivé, puis relancez FlClash. Smart App Control ne peut pas être réactivé sans réinstaller Windows.';
+      'Windows Smart App Control a bloqué KlashCore.exe car il n’est pas signé. Ouvrez Sécurité Windows → Contrôle des applications et du navigateur → Paramètres de Smart App Control, choisissez Désactivé, puis relancez Klash. Smart App Control ne peut pas être réactivé sans réinstaller Windows.';
 
   @override
   String get hideFromList => 'Masquer de la liste';
@@ -3057,7 +3057,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get initFailedTip =>
-      'FlClash a rencontré une erreur au démarrage et ne peut pas continuer. Copiez les détails pour signaler le problème. Si cela se reproduit, effacer les données permet généralement de relancer l’app.';
+      'Klash a rencontré une erreur au démarrage et ne peut pas continuer. Copiez les détails pour signaler le problème. Si cela se reproduit, effacer les données permet généralement de relancer l’app.';
 
   @override
   String get errorDetails => 'Détails de l’erreur';
@@ -3687,7 +3687,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mitmEnableTip =>
-      'FlClash pourra lire tout ce qui est envoyé aux hôtes déchiffrés, cookies et mots de passe compris. N’activez cette option que pour les hôtes à réécrire.';
+      'Klash pourra lire tout ce qui est envoyé aux hôtes déchiffrés, cookies et mots de passe compris. N’activez cette option que pour les hôtes à réécrire.';
 
   @override
   String get generateCertificate => 'Générer le certificat';
@@ -3697,7 +3697,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get regenerateCertificateTip =>
-      'Le nouveau certificat remplace l’actuel, que FlClash retire des racines de confiance de cet appareil quand il le peut. Chaque autre appareil qui fait confiance à l’actuel doit installer le nouveau.';
+      'Le nouveau certificat remplace l’actuel, que Klash retire des racines de confiance de cet appareil quand il le peut. Chaque autre appareil qui fait confiance à l’actuel doit installer le nouveau.';
 
   @override
   String get exportCertificate => 'Exporter le certificat';
@@ -3786,7 +3786,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get mitmInstallSystemCaTip =>
-      'Root a été détecté : le certificat sera ajouté aux certificats de confiance du système sous forme de module Magisk, KernelSU ou APatch « FlClash MITM CA ». Toutes les applications de l’appareil lui feront alors confiance, et quiconque détient sa clé privée pourra déchiffrer le trafic HTTPS de l’appareil. Pour annuler, régénérez le certificat ou supprimez le module dans le gestionnaire root, puis redémarrez. Si root est refusé, il sera installé comme certificat utilisateur.';
+      'Root a été détecté : le certificat sera ajouté aux certificats de confiance du système sous forme de module Magisk, KernelSU ou APatch « Klash MITM CA ». Toutes les applications de l’appareil lui feront alors confiance, et quiconque détient sa clé privée pourra déchiffrer le trafic HTTPS de l’appareil. Pour annuler, régénérez le certificat ou supprimez le module dans le gestionnaire root, puis redémarrez. Si root est refusé, il sera installé comme certificat utilisateur.';
 
   @override
   String get mitmInstallUserCaTip =>
@@ -3812,7 +3812,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String mitmOldSystemCertificateLeftTip(Object name) {
-    return 'L’ancien certificat, $name, figure toujours parmi les certificats de confiance du système. Autorisez l’accès root à FlClash dans votre gestionnaire root puis régénérez-le, ou supprimez-y le module « FlClash MITM CA » et redémarrez.';
+    return 'L’ancien certificat, $name, figure toujours parmi les certificats de confiance du système. Autorisez l’accès root à Klash dans votre gestionnaire root puis régénérez-le, ou supprimez-y le module « Klash MITM CA » et redémarrez.';
   }
 
   @override
@@ -3845,7 +3845,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String mitmDecryptHostTip(Object host) {
-    return 'Ajouter $host à la liste des noms d’hôte ? FlClash pourra lire ce qui lui est envoyé, cookies et mots de passe compris.';
+    return 'Ajouter $host à la liste des noms d’hôte ? Klash pourra lire ce qui lui est envoyé, cookies et mots de passe compris.';
   }
 
   @override
@@ -4179,7 +4179,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get updateRestartTip =>
-      'FlClash se ferme pour installer la mise à jour et se rouvre une fois terminée.';
+      'Klash se ferme pour installer la mise à jour et se rouvre une fois terminée.';
 
   @override
   String get updateDownloadFailed =>
@@ -4338,4 +4338,28 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get httpConditionTip =>
       'Les conditions d’un même champ en demandent une seule, celles de champs différents toutes.';
+
+  @override
+  String get klashMonitorTarget => 'Cible de surveillance';
+
+  @override
+  String get klashMonitorRules => 'Suivre les règles';
+
+  @override
+  String get klashMonitorGroup => 'Surveiller ce groupe ; actuel';
+
+  @override
+  String get klashMonitorUnavailable => 'Indisponible dans ce profil';
+
+  @override
+  String get klashMonitorOptions => 'Options de surveillance';
+
+  @override
+  String get klashMonitorRefresh => 'Actualiser la sortie et la qualité';
+
+  @override
+  String get klashMonitorSet => 'Surveiller cette cible';
+
+  @override
+  String get klashUpstream => 'Projet amont FlClash';
 }

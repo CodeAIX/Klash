@@ -1,4 +1,5 @@
 import 'package:fl_clash/common/service_probe.dart';
+import 'package:fl_clash/common/system.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -13,6 +14,11 @@ part 'generated/outbound_ip.g.dart';
 @Riverpod(keepAlive: true)
 class OutboundIpProbe extends _$OutboundIpProbe
     with RoutedProbe<String, IpInfo> {
+  @override
+  bool get runsInBackground =>
+      system.isMacOS &&
+      const bool.fromEnvironment('KLASH_STATUS_ICON', defaultValue: true);
+
   @override
   RoutedProbeState<String, IpInfo> build() => buildProbe();
 

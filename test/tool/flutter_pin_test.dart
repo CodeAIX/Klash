@@ -21,7 +21,9 @@ void main() {
   test('release builds pin a Flutter whose Linux engine draws without '
       'glBlitFramebuffer in place', () {
     final workflow =
-        loadYaml(File('.github/workflows/build.yaml').readAsStringSync())
+        loadYaml(
+              File('.github/upstream-workflows/build.yaml').readAsStringSync(),
+            )
             as YamlMap;
     final pinned = (workflow['env'] as YamlMap)['FLUTTER_VERSION'] as String;
 

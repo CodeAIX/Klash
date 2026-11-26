@@ -18,11 +18,23 @@ final class TrayMenuAction extends TrayMenuItem {
   final TrayMenuItemSelectedCallback? onSelected;
 }
 
+final class TrayMenuAccessory {
+  const TrayMenuAccessory({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+  final String label;
+  final bool selected;
+  final TrayMenuItemSelectedCallback onSelected;
+}
+
 final class TrayMenuCheckbox extends TrayMenuItem {
   const TrayMenuCheckbox({
     required this.label,
     required this.checked,
     this.detail,
+    this.accessory,
     this.enabled = true,
     this.onSelected,
   });
@@ -30,6 +42,7 @@ final class TrayMenuCheckbox extends TrayMenuItem {
   final String label;
   final bool checked;
   final String? detail;
+  final TrayMenuAccessory? accessory;
   final bool enabled;
   final TrayMenuItemSelectedCallback? onSelected;
 }
@@ -39,12 +52,14 @@ final class TrayMenuSubmenu extends TrayMenuItem {
     required this.label,
     required this.items,
     this.detail,
+    this.accessory,
     this.enabled = true,
   });
 
   final String label;
   final List<TrayMenuItem> items;
   final String? detail;
+  final TrayMenuAccessory? accessory;
   final bool enabled;
 }
 

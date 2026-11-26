@@ -12,6 +12,8 @@ import 'package:fl_clash/common/release_asset.dart';
 import 'package:fl_clash/common/request.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fl_clash/state.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class _StalledHttpClient extends Fake implements HttpClient {
   @override
@@ -163,6 +165,30 @@ void main() {
       return Request()..dio.httpClientAdapter = _HostAdapter(byHost);
     }
 
+    for (final build in ['2026102301', '2026102302']) {
+      test('compares repair release against installed build $build', () async {
+        globalState.packageInfo = PackageInfo(
+          appName: 'Klash',
+          packageName: 'com.codeaix.klash',
+          version: '1.9.1',
+          buildNumber: build,
+        );
+        final request = requestAnswering({
+          'api.github.com': () => ResponseBody.fromString(
+            '{"tag_name":"v1.9.1+2026102302"}',
+            200,
+            headers: {
+              Headers.contentTypeHeader: [Headers.jsonContentType],
+            },
+          ),
+        });
+        expect(
+          await request.checkForUpdate(UpdateChannel.stable),
+          build == '2026102301' ? isNotNull : isNull,
+        );
+      });
+    }
+
     test('reads the release from the API', () async {
       final request = requestAnswering({
         'api.github.com': () => ResponseBody.fromString(
@@ -237,7 +263,7 @@ void main() {
         'body': ?body,
         'assets': [
           if (uploaded) {'name': updateChecksumsName(tag)},
-          {'name': 'FlClash-${releaseVersionOfTag(tag)}-android-arm64.apk'},
+          {'name': 'Klash-${releaseVersionOfTag(tag)}-android-arm64.apk'},
         ],
       };
     }

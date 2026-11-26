@@ -3566,6 +3566,28 @@ impl SseDecode for Option<f64> {
     }
 }
 
+impl SseDecode for Option<crate::api::tray::TrayAccessory> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::tray::TrayAccessory>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<crate::api::tray::TrayBadge> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::tray::TrayBadge>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3636,6 +3658,34 @@ impl SseDecode for crate::api::window::TitleBarStyle {
     }
 }
 
+impl SseDecode for crate::api::tray::TrayAccessory {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <u32>::sse_decode(deserializer);
+        let mut var_label = <String>::sse_decode(deserializer);
+        let mut var_selected = <bool>::sse_decode(deserializer);
+        return crate::api::tray::TrayAccessory {
+            id: var_id,
+            label: var_label,
+            selected: var_selected,
+        };
+    }
+}
+
+impl SseDecode for crate::api::tray::TrayBadge {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_country = <String>::sse_decode(deserializer);
+        let mut var_status = <String>::sse_decode(deserializer);
+        let mut var_highQuality = <bool>::sse_decode(deserializer);
+        return crate::api::tray::TrayBadge {
+            country: var_country,
+            status: var_status,
+            high_quality: var_highQuality,
+        };
+    }
+}
+
 impl SseDecode for crate::api::tray::TrayContent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -3674,12 +3724,14 @@ impl SseDecode for crate::api::tray::TrayImage {
         let mut var_template = <bool>::sse_decode(deserializer);
         let mut var_size = <u32>::sse_decode(deserializer);
         let mut var_placement = <crate::api::tray::TrayIconPlacement>::sse_decode(deserializer);
+        let mut var_badge = <Option<crate::api::tray::TrayBadge>>::sse_decode(deserializer);
         return crate::api::tray::TrayImage {
             path: var_path,
             pngs: var_pngs,
             template: var_template,
             size: var_size,
             placement: var_placement,
+            badge: var_badge,
         };
     }
 }
@@ -3694,6 +3746,7 @@ impl SseDecode for crate::api::tray::TrayItem {
         let mut var_enabled = <bool>::sse_decode(deserializer);
         let mut var_checked = <bool>::sse_decode(deserializer);
         let mut var_items = <Vec<crate::api::tray::TrayItem>>::sse_decode(deserializer);
+        let mut var_accessory = <Option<crate::api::tray::TrayAccessory>>::sse_decode(deserializer);
         return crate::api::tray::TrayItem {
             id: var_id,
             kind: var_kind,
@@ -3702,6 +3755,7 @@ impl SseDecode for crate::api::tray::TrayItem {
             enabled: var_enabled,
             checked: var_checked,
             items: var_items,
+            accessory: var_accessory,
         };
     }
 }
@@ -4347,6 +4401,47 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::window::TitleBarStyle>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::tray::TrayAccessory {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.id.into_into_dart().into_dart(),
+            self.label.into_into_dart().into_dart(),
+            self.selected.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::tray::TrayAccessory
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::tray::TrayAccessory>
+    for crate::api::tray::TrayAccessory
+{
+    fn into_into_dart(self) -> crate::api::tray::TrayAccessory {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::tray::TrayBadge {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.country.into_into_dart().into_dart(),
+            self.status.into_into_dart().into_dart(),
+            self.high_quality.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::tray::TrayBadge {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::tray::TrayBadge>
+    for crate::api::tray::TrayBadge
+{
+    fn into_into_dart(self) -> crate::api::tray::TrayBadge {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::tray::TrayContent {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -4397,6 +4492,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::tray::TrayImage {
             self.template.into_into_dart().into_dart(),
             self.size.into_into_dart().into_dart(),
             self.placement.into_into_dart().into_dart(),
+            self.badge.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -4420,6 +4516,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::tray::TrayItem {
             self.enabled.into_into_dart().into_dart(),
             self.checked.into_into_dart().into_dart(),
             self.items.into_into_dart().into_dart(),
+            self.accessory.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -5028,6 +5125,26 @@ impl SseEncode for Option<f64> {
     }
 }
 
+impl SseEncode for Option<crate::api::tray::TrayAccessory> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::tray::TrayAccessory>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<crate::api::tray::TrayBadge> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::tray::TrayBadge>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<u32> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5092,6 +5209,24 @@ impl SseEncode for crate::api::window::TitleBarStyle {
     }
 }
 
+impl SseEncode for crate::api::tray::TrayAccessory {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.id, serializer);
+        <String>::sse_encode(self.label, serializer);
+        <bool>::sse_encode(self.selected, serializer);
+    }
+}
+
+impl SseEncode for crate::api::tray::TrayBadge {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.country, serializer);
+        <String>::sse_encode(self.status, serializer);
+        <bool>::sse_encode(self.high_quality, serializer);
+    }
+}
+
 impl SseEncode for crate::api::tray::TrayContent {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -5127,6 +5262,7 @@ impl SseEncode for crate::api::tray::TrayImage {
         <bool>::sse_encode(self.template, serializer);
         <u32>::sse_encode(self.size, serializer);
         <crate::api::tray::TrayIconPlacement>::sse_encode(self.placement, serializer);
+        <Option<crate::api::tray::TrayBadge>>::sse_encode(self.badge, serializer);
     }
 }
 
@@ -5140,6 +5276,7 @@ impl SseEncode for crate::api::tray::TrayItem {
         <bool>::sse_encode(self.enabled, serializer);
         <bool>::sse_encode(self.checked, serializer);
         <Vec<crate::api::tray::TrayItem>>::sse_encode(self.items, serializer);
+        <Option<crate::api::tray::TrayAccessory>>::sse_encode(self.accessory, serializer);
     }
 }
 

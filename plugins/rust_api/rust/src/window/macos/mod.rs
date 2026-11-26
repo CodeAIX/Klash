@@ -15,10 +15,11 @@ use objc2::{define_class, msg_send, sel, MainThreadMarker, MainThreadOnly};
 use objc2_app_kit::{
     NSAppearance, NSAppearanceCustomization, NSAppearanceNameAqua, NSAppearanceNameDarkAqua,
     NSApplication, NSApplicationActivationPolicy, NSApplicationDidBecomeActiveNotification,
-    NSApplicationWillBecomeActiveNotification, NSApplicationWillResignActiveNotification, NSColor,
-    NSEvent, NSFloatingWindowLevel, NSNormalWindowLevel, NSScreen, NSWindow,
-    NSWindowCollectionBehavior, NSWindowDelegate, NSWindowStyleMask, NSWindowTitleVisibility,
-    NSWorkspace, NSWorkspaceScreensDidSleepNotification, NSWorkspaceScreensDidWakeNotification,
+    NSApplicationDidHideNotification, NSApplicationWillBecomeActiveNotification,
+    NSApplicationWillResignActiveNotification, NSColor, NSEvent, NSFloatingWindowLevel,
+    NSNormalWindowLevel, NSScreen, NSWindow, NSWindowCollectionBehavior, NSWindowDelegate,
+    NSWindowStyleMask, NSWindowTitleVisibility, NSWorkspace,
+    NSWorkspaceScreensDidSleepNotification, NSWorkspaceScreensDidWakeNotification,
     NSWorkspaceSessionDidBecomeActiveNotification, NSWorkspaceSessionDidResignActiveNotification,
 };
 use objc2_foundation::{
@@ -155,6 +156,11 @@ define_class!(
             STATE.with(State::finish_show);
         }
 
+        #[unsafe(method(applicationDidHide:))]
+        fn application_did_hide(&self, _notification: &NSNotification) {
+            STATE.with(|state| state.tray_hiding.set(false));
+        }
+
         #[unsafe(method(shouldTerminate:))]
         fn should_terminate(&self, _notification: &NSNotification) {
             emit(WindowSignal::ShouldTerminate);
@@ -203,6 +209,9 @@ struct State {
     reported_hidden: Cell<bool>,
     unseen: Cell<u8>,
     geometry_generation: Cell<u64>,
+    visibility_generation: Cell<u64>,
+    tray_hidden: Cell<bool>,
+    tray_hiding: Cell<bool>,
 }
 
 thread_local! {
@@ -226,6 +235,9 @@ thread_local! {
             reported_hidden: Cell::new(false),
             unseen: Cell::new(0),
             geometry_generation: Cell::new(0),
+            visibility_generation: Cell::new(0),
+            tray_hidden: Cell::new(false),
+            tray_hiding: Cell::new(false),
         }
     };
 }
@@ -245,6 +257,64 @@ impl State {
             .borrow_mut()
             .get_or_insert_with(|| unsafe { msg_send![Delegate::alloc(mtm), init] })
             .clone()
+    }
+
+    fn present(&self, mtm: MainThreadMarker) {
+        let Some(window) = self.window() else { return };
+        let app = NSApplication::sharedApplication(mtm);
+        app.setActivationPolicy(NSApplicationActivationPolicy::Regular);
+        if app.isHidden() {
+            app.unhideWithoutActivation();
+        }
+        if window.isVisible() {
+            window.makeKeyAndOrderFront(None);
+            #[allow(deprecated)]
+            app.activateIgnoringOtherApps(true);
+        } else if !self.show_pending.get() {
+            self.show_on_active_space(&window, mtm);
+        }
+    }
+
+    fn prepare_show(&self, generation: u64, deadline: std::time::Instant) {
+        if self.visibility_generation.get() != generation || !self.show_pending.get() {
+            return;
+        }
+        let mtm = MainThreadMarker::new().expect("main thread");
+        let app = NSApplication::sharedApplication(mtm);
+        if (self.tray_hiding.get() || (app.isHidden() && app.isActive()))
+            && std::time::Instant::now() < deadline
+        {
+            let _ = DispatchQueue::main().after(DispatchTime::NOW.time(20_000_000), move || {
+                STATE.with(|state| state.prepare_show(generation, deadline))
+            });
+            return;
+        }
+        self.tray_hidden.set(false);
+        self.tray_hiding.set(false);
+        self.show_pending.set(false);
+        self.present(mtm);
+    }
+
+    fn accessory_after_handoff(&self, generation: u64, deadline: std::time::Instant) {
+        if self.visibility_generation.get() != generation
+            || !self.tray_hidden.get()
+            || std::time::Instant::now() >= deadline
+        {
+            return;
+        }
+        let mtm = MainThreadMarker::new().expect("main thread");
+        let app = NSApplication::sharedApplication(mtm);
+        if app.isHidden()
+            && !app.isActive()
+            && self.window().is_some_and(|window| !window.isVisible())
+            && owns_menu_bar() == Some(false)
+        {
+            app.setActivationPolicy(NSApplicationActivationPolicy::Accessory);
+        } else {
+            let _ = DispatchQueue::main().after(DispatchTime::NOW.time(20_000_000), move || {
+                STATE.with(|state| state.accessory_after_handoff(generation, deadline))
+            });
+        }
     }
 
     fn remember_normal_frame(&self, window: &NSWindow) {
@@ -281,6 +351,9 @@ impl State {
     }
 
     fn finish_show(&self) {
+        if self.tray_hidden.get() {
+            return;
+        }
         if self.show_pending.replace(false) {
             if let Some(window) = self.window() {
                 self.order_in(&window);
@@ -467,6 +540,9 @@ pub(super) fn observe() {
                 observe(sel!(applicationDidBecomeActive:), unsafe {
                     NSApplicationDidBecomeActiveNotification
                 });
+                observe(sel!(applicationDidHide:), unsafe {
+                    NSApplicationDidHideNotification
+                });
                 observe(
                     sel!(shouldTerminate:),
                     &NSString::from_str(SHOULD_TERMINATE),
@@ -572,34 +648,81 @@ pub fn ensure_initialized() -> Result<(), String> {
 
 pub fn show() -> Result<(), String> {
     on_main(|state, mtm| {
-        let window = state.require_window()?;
-        if window.isVisible() {
-            window.makeKeyAndOrderFront(None);
-            #[allow(deprecated)]
-            NSApplication::sharedApplication(mtm).activateIgnoringOtherApps(true);
-        } else if !state.show_pending.get() {
-            state.show_on_active_space(&window, mtm);
+        state.require_window()?;
+        let generation = state.visibility_generation.get().wrapping_add(1);
+        state.visibility_generation.set(generation);
+        if state.tray_hidden.get() {
+            state.show_pending.set(true);
+            state.prepare_show(
+                generation,
+                std::time::Instant::now() + std::time::Duration::from_millis(1500),
+            );
+        } else {
+            state.present(mtm);
         }
         Ok(())
     })
 }
 
 pub fn hide() -> Result<(), String> {
-    on_main(|state, _| {
+    on_main(|state, mtm| {
         let window = state.require_window()?;
+        state
+            .visibility_generation
+            .set(state.visibility_generation.get().wrapping_add(1));
         state.show_pending.set(false);
         state.restore_space_behavior();
-        window.orderOut(None);
+        if state.tray_hidden.get() {
+            return Ok(());
+        }
+        let app = NSApplication::sharedApplication(mtm);
+        if window.isVisible()
+            && !has_other_visible_window(&window, mtm)
+            && app.isActive()
+            && owns_menu_bar() == Some(true)
+        {
+            state.tray_hidden.set(true);
+            state.tray_hiding.set(true);
+            app.hide(None);
+        } else {
+            window.orderOut(None);
+        }
         Ok(())
     })
 }
 
+fn owns_menu_bar() -> Option<bool> {
+    NSWorkspace::sharedWorkspace()
+        .menuBarOwningApplication()
+        .map(|app| app.processIdentifier() == std::process::id() as i32)
+}
+
+fn has_other_visible_window(window: &NSWindow, mtm: MainThreadMarker) -> bool {
+    window.attachedSheet().is_some()
+        || NSApplication::sharedApplication(mtm)
+            .windows()
+            .iter()
+            .any(|other| {
+                !std::ptr::eq(&*other, window)
+                    && other.isVisible()
+                    && (other.canBecomeKeyWindow() || other.canBecomeMainWindow())
+            })
+}
+
 pub fn is_visible() -> Result<bool, String> {
-    on_main(|state, _| Ok(state.require_window()?.isVisible() || state.show_pending.get()))
+    on_main(|state, _| {
+        Ok(
+            (!state.tray_hidden.get() && state.require_window()?.isVisible())
+                || state.show_pending.get(),
+        )
+    })
 }
 
 pub fn focus() -> Result<(), String> {
     on_main(|state, mtm| {
+        if state.tray_hidden.get() && state.show_pending.get() {
+            return Ok(());
+        }
         let window = state.require_window()?;
         #[allow(deprecated)]
         NSApplication::sharedApplication(mtm).activateIgnoringOtherApps(false);
@@ -800,13 +923,22 @@ pub fn set_title_bar_style(style: TitleBarStyle) -> Result<(), String> {
 }
 
 pub fn set_skip_taskbar(value: bool) -> Result<(), String> {
-    on_main(move |_, mtm| {
-        let policy = if value {
-            NSApplicationActivationPolicy::Accessory
-        } else {
-            NSApplicationActivationPolicy::Regular
-        };
-        NSApplication::sharedApplication(mtm).setActivationPolicy(policy);
+    on_main(move |state, mtm| {
+        let window = state.require_window()?;
+        let app = NSApplication::sharedApplication(mtm);
+        if !value {
+            if state.tray_hidden.get() && state.show_pending.get() {
+                return Ok(());
+            }
+            app.setActivationPolicy(NSApplicationActivationPolicy::Regular);
+        } else if state.tray_hidden.get() {
+            state.accessory_after_handoff(
+                state.visibility_generation.get(),
+                std::time::Instant::now() + std::time::Duration::from_millis(1500),
+            );
+        } else if !has_other_visible_window(&window, mtm) {
+            app.setActivationPolicy(NSApplicationActivationPolicy::Accessory);
+        }
         Ok(())
     })
 }

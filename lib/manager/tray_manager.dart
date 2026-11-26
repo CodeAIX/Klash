@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:fl_clash/common/klash_monitor.dart';
+
 import 'package:collection/collection.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/tray.dart';
@@ -8,6 +10,11 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/action.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/state.dart';
+import 'package:fl_clash/providers/outbound_ip.dart';
+import 'package:fl_clash/providers/ip_quality.dart';
+import 'package:fl_clash/providers/routed_probe.dart';
+import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/providers/route_state.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rust_api/tray.dart';
@@ -23,6 +30,13 @@ class TrayManager extends ConsumerStatefulWidget {
 
 class _TrayManagerState extends ConsumerState<TrayManager> {
   StreamSubscription<TrayEvent>? _subscription;
+  Timer? _klashTimer;
+  ProviderSubscription<AsyncValue<IpQuality>>? _qualitySubscription;
+  String? _qualityIp;
+  bool _klashWatching = false;
+  String? _klashTarget;
+  OutboundIpProbe? _klashProbe;
+  RouteTracker? _klashRoute;
   bool _isUpdating = false;
   bool _hasPendingUpdate = false;
 
@@ -40,6 +54,23 @@ class _TrayManagerState extends ConsumerState<TrayManager> {
         _requestUpdate();
       }
     });
+    if (system.isMacOS &&
+        const bool.fromEnvironment('KLASH_STATUS_ICON', defaultValue: true)) {
+      ref.listenManual(klashMonitorTargetProvider, (_, _) {
+        scheduleMicrotask(_syncKlashWatch);
+        _requestUpdate();
+      });
+      ref.listenManual(groupsProvider, (_, _) => _requestUpdate());
+      scheduleMicrotask(_syncKlashWatch);
+      ref.listenManual(
+        trayStateProvider,
+        (_, _) => scheduleMicrotask(_syncKlashWatch),
+      );
+      ref.listenManual(outboundIpProbeProvider, (_, _) {
+        scheduleMicrotask(_syncKlashQuality);
+        _requestUpdate();
+      });
+    }
     if (system.isMacOS) {
       ref.listenManual(trayDelaysProvider, (prev, next) {
         if (!const DeepCollectionEquality().equals(prev, next)) {
@@ -56,6 +87,61 @@ class _TrayManagerState extends ConsumerState<TrayManager> {
           );
         }
       });
+    }
+  }
+
+  void _syncKlashWatch() {
+    if (!mounted) return;
+    final tray = ref.read(trayStateProvider);
+    _syncKlashQuality();
+    final wanted = !tray.safeMode && tray.isStart && !tray.suspended;
+    final target = ref.read(klashMonitorTargetProvider);
+    if (wanted == _klashWatching && target == _klashTarget) return;
+    if (_klashWatching) {
+      _klashTimer?.cancel();
+      _klashProbe?.unwatch(_klashTarget!);
+      _klashRoute?.detachBackground();
+    }
+    _klashWatching = wanted;
+    _klashTarget = target;
+    if (wanted) {
+      _klashRoute = ref.read(routeTrackerProvider.notifier);
+      _klashProbe = ref.read(outboundIpProbeProvider.notifier);
+      _klashRoute!.attachBackground();
+      _klashProbe!.watch(target);
+      _klashProbe!.refresh([target]);
+      _klashTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+        ref.read(outboundIpProbeProvider.notifier).refresh([target]);
+      });
+    } else {
+      _klashTimer?.cancel();
+      _klashProbe = null;
+      _klashRoute = null;
+    }
+  }
+
+  void _syncKlashQuality() {
+    if (!mounted) return;
+    final tray = ref.read(trayStateProvider);
+    final entry = ref
+        .read(outboundIpProbeProvider)
+        .entryOf(ref.read(klashMonitorTargetProvider));
+    final ip =
+        !tray.safeMode &&
+            tray.isStart &&
+            !tray.suspended &&
+            entry.phase == ProbePhase.fresh
+        ? entry.value?.ip
+        : null;
+    if (ip == _qualityIp) return;
+    _qualitySubscription?.close();
+    _qualitySubscription = null;
+    _qualityIp = ip;
+    if (ip != null) {
+      _qualitySubscription = ref.listenManual(
+        ipQualityProvider(ip),
+        (_, _) => _requestUpdate(),
+      );
     }
   }
 
@@ -115,6 +201,14 @@ class _TrayManagerState extends ConsumerState<TrayManager> {
 
   @override
   void dispose() {
+    _qualitySubscription?.close();
+    _klashTimer?.cancel();
+    if (_klashWatching) {
+      _klashProbe?.unwatch(_klashTarget!);
+      _klashRoute?.detachBackground();
+      _klashProbe = null;
+      _klashRoute = null;
+    }
     _subscription?.cancel();
     super.dispose();
   }

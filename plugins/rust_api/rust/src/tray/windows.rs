@@ -408,6 +408,7 @@ mod tests {
             enabled: true,
             checked: false,
             items: Vec::new(),
+            accessory: None,
         }
     }
 

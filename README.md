@@ -1,144 +1,72 @@
-<div align="center">
+# Klash
 
-<img src="assets/images/icon.png" alt="FlClash" width="88">
+[简体中文](README_zh_CN.md)
 
-# FlClash
+![Klash application icon](macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png)
 
-A multi-platform proxy client based on ClashMeta. Simple to use, open source and ad-free.
+Klash, formerly Flash, is an unofficial derivative of [FlClash](https://github.com/chen08209/FlClash), maintained by CodeAIX. It preserves the upstream Core, profiles, subscriptions, rules and proxy controls, and adds macOS menu-bar exit monitoring. Klash does not provide proxy servers or subscriptions. The original GPL-3.0 license and upstream credits are retained; see [KLASH-NOTICE.md](KLASH-NOTICE.md).
 
-**English** · [简体中文](README_zh_CN.md)
+## Download and migration
 
-[![Release](https://img.shields.io/github/v/release/chen08209/FlClash?style=flat-square&label=release)](https://github.com/chen08209/FlClash/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/chen08209/FlClash/total?style=flat-square&logo=github)](https://github.com/chen08209/FlClash/releases)
-[![License](https://img.shields.io/github/license/chen08209/FlClash?style=flat-square)](LICENSE)
-[![Telegram](https://img.shields.io/badge/Telegram-channel-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://t.me/FlClash)
+Download from [Klash Releases](https://github.com/CodeAIX/Klash/releases/latest): **arm64** for Apple Silicon, **x86_64** for Intel. Drag **Klash.app** from the DMG into Applications. Packages are ad-hoc signed and not notarized. Each binary includes its exact source archive with pinned Core/prism_ui, revision record and SHA256SUMS.
 
-[Website](https://chen08209.github.io/FlClash) · [Download](#download) · [Changelog](CHANGELOG.md) · [Build from source](#build-from-source)
+Klash 1.9.5 candidate uses build **2026112601** and bundle ID **com.codeaix.klash**. Its data directory and permission identity are separate. Export a local backup from Flash, stop Flash before switching network clients, then restore the backup in Klash. No active database is automatically copied and no old data is overwritten. Select the monitored target again if needed. This release does not automatically replace your installed Flash. Historical Flash releases and their original filenames remain available.
 
-</div>
+New WebDAV backups use **/Klash/&lt;filename&gt;**, normally backup.zip. Restore tries /Klash, /Flash, then /FlClash, keeping the same filename and configured server base path. Only HTTP 404/409 advances to the next path; authentication and other errors remain errors. Old backup files are read without modifying or deleting them. A successful connectivity test does not prove that a backup exists.
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="snapshots/preview-dark.png">
-    <img alt="FlClash dashboard on a MacBook and a phone" src="snapshots/preview.png" width="92%">
-  </picture>
-</p>
+## Status legend
 
-## Features
+The approved white-tile, emerald-to-mint application icon is unchanged. Its original macOS corner curvature, margins and shadow are preserved. Artwork and generation instructions are in [klash/branding](klash/branding).
 
-- **One app for Android, Windows, macOS and Linux**, with x64 and ARM64 builds on the desktop.
-- **mihomo (Clash.Meta) core** with rule routing, proxy groups, latency tests, system proxy and TUN mode.
-- **Profiles** from a subscription link or a file, with a built-in editor, override scripts, and custom rules,
-  proxies and proxy groups.
-- **Live views** of connections, requests, DNS queries and logs.
-- **Material You design with Apple-style interaction**: dynamic color, light and dark themes, continuous corners,
-  sheets that snap between heights, and layouts that adapt from phones to desktops.
-- **Backup and restore** through WebDAV or a local file.
-- **Platform touches**: a Quick Settings tile, per-app proxy and Android TV support on Android; a tray menu and
-  global hotkeys on the desktop.
-- **Open source and ad-free**, licensed under GPL-3.0.
+The menu-bar badge remains 26 × 18 pt with soft continuous corners and heavy country text. **Background shows entry configuration; text color shows IP quality.**
 
-## Download
+![Dark and light status legend](klash/images/status-legend.png)
 
-Get the latest build from [GitHub Releases](https://github.com/chen08209/FlClash/releases/latest), or open the
-[website](https://chen08209.github.io/FlClash#download), which picks the right file for your device.
-
-| Platform | Packages | Notes |
-| --- | --- | --- |
-| Android | APK for `arm64` (arm64-v8a), `armv7` (armeabi-v7a) and `amd64` (x86_64) | Most phones use `arm64`. Also on the F-Droid repository below. |
-| Windows 10 and later | Installer (`.exe`) or portable `.zip`, for x64 and ARM64 | Pick ARM64 on Snapdragon and other ARM laptops. |
-| macOS 12 and later | DMG for Apple Silicon and Intel | Also on Homebrew. |
-| Linux | `.deb`, `.rpm` and AppImage, for x64 and ARM64 | See the tray note below. |
-
-<p>
-  <a href="https://chen08209.github.io/FlClash-fdroid-repo/repo?fingerprint=789D6D32668712EF7672F9E58DEEB15FBD6DCEEC5AE7A4371EA72F2AAE8A12FD"><img alt="Get it on F-Droid" src="snapshots/get-it-on-fdroid.svg" height="56"></a>
-  <a href="https://github.com/chen08209/FlClash/releases/latest"><img alt="Get it on GitHub" src="snapshots/get-it-on-github.svg" height="56"></a>
-</p>
-
-**Homebrew**
-
-```bash
-brew tap chen08209/tap
-brew install --cask flclash
-```
-
-**macOS first launch**
-
-The app is not notarized, so macOS refuses to open it the first time. After dragging it to Applications, run
-`xattr -dr com.apple.quarantine /Applications/FlClash*.app`, or choose Open Anyway under System Settings > Privacy &
-Security. Later updates install from inside the app.
-
-**Linux tray icon**
-
-The tray icon is a StatusNotifierItem. KDE Plasma, XFCE and most panels show it as is; GNOME needs the
-AppIndicator and KStatusNotifierItem Support extension.
-
-**Unattended desktop**
-
-FlClash starts the core only after the disclaimer is accepted. Where nobody can click it, such as a container, set
-`FLCLASH_ACCEPT_DISCLAIMER=1` in the app's environment to accept it on first launch.
-
-## Usage
-
-**Import a profile from a link.** Opening a link in this form imports the subscription into FlClash. The `clashmeta://`
-and `flclash://` schemes work the same way.
-
-```text
-clash://install-config?url=<URL-encoded subscription link>
-```
-
-**Automate on Android.** Tasker, MacroDroid and similar apps can start, stop or toggle the proxy by starting an
-activity with one of these actions:
-
-```text
-com.follow.clash.action.START
-com.follow.clash.action.STOP
-com.follow.clash.action.TOGGLE
-```
-
-From a computer, the same works over adb:
-
-```bash
-adb shell am start -a com.follow.clash.action.TOGGLE
-```
-
-## Build from source
-
-You need [Flutter](https://docs.flutter.dev/get-started/install) 3.50 (release builds use 3.50.1),
-[Go](https://go.dev/dl/) 1.27 and [Rust](https://rustup.rs/) installed through rustup. Each platform builds on its own
-host, except Android, which builds anywhere.
-
-```bash
-git clone --recursive https://github.com/chen08209/FlClash.git
-cd FlClash
-flutter pub get
-dart run tool/package.dart android   # or windows, macos, linux
-```
-
-Packages land in `dist/`. The Go core and the Rust libraries are compiled as part of the Flutter build.
-
-| Platform | Also needed |
+| Background or symbol | Meaning |
 | --- | --- |
-| Android | Android SDK with the NDK. Add `--arch arm64` to build a single ABI. |
-| Windows | GCC (MinGW-w64) for the core and [Inno Setup](https://jrsoftware.org/isinfo.php) 6 for the installer. |
-| macOS | Xcode and Node.js. The script installs `appdmg` through npm. |
-| Linux | Debian or Ubuntu. The script installs the build packages with apt and downloads `appimagetool`. |
+| Green | TUN configured on, taking priority over system proxy |
+| Blue | TUN off, system proxy configured on |
+| Orange | Both entry modes configured off |
+| Gray with upstream-style logo | Core stopped or paused; country hidden |
+| Neutral with red F | Exit lookup failed; F remains the failure indicator |
 
-Run `dart run tool/package.dart --help` for the remaining options, such as `--targets` to build only some package formats or `--dry-run` to list the files a run would write.
+| Country text | Meaning |
+| --- | --- |
+| White | Built-in rating for this IP is excellent, IpQualityLevel.good |
+| Black | Other, unknown, loading or failed quality lookup |
+| -- | Country unknown |
 
-## Support
+Green/white US means TUN enabled, a US exit and excellent quality. Blue/black JP means system proxy only, a Japanese exit and other/unknown quality. A lookup may succeed with both entry modes off; it does not prove that every application uses this route. Residential, mobile and business IPs are usually good; Tor/abuse flags lower the rating and hosting IPs are not good. An old-IP result cannot turn a new IP white. Stopped/paused takes priority, followed by lookup failure and then normal country rendering.
 
-Starring the repository is the easiest way to support the project. Questions and announcements go to the
-[Telegram channel](https://t.me/FlClash); bugs and feature requests go to
-[GitHub Issues](https://github.com/chen08209/FlClash/issues).
+Revision 3 prepares finite glyph paths outside the drawing callback. Redraw fills paths rather than performing NSString text layout, bypassing the observed CoreText attributed-text crash chain. Weight and baseline are calibrated against the previous 12.5 pt Heavy renderer; missing glyph preparation falls back to the visible logo. Only A–Z and the hyphen are cached. Rendering stress tests do not replace long-running sleep/wake or display-switch acceptance.
 
-<a href="https://star-history.com/#chen08209/FlClash&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=chen08209/FlClash&type=Date&theme=dark">
-    <img alt="Star history" src="https://api.star-history.com/svg?repos=chen08209/FlClash&type=Date" width="640">
-  </picture>
-</a>
+## Independent monitor controls
 
-## License
+Use the independent ◎ beside a group or node, just before its delay. The current target has a persistent filled marker; other buttons appear on the highlighted row. The left ✓ still represents proxy selection. Clicking a node name keeps the original switch action; group arrows open their submenus. ◎ changes only the monitored target.
 
-FlClash is released under the [GPL-3.0 license](LICENSE).
+Select a manual group, an automatic group appearing inside it, or a concrete node. Groups follow their current actual exit; a fixed node remains the target when another group changes. Monitoring options at the bottom show the target, restore rule routing and refresh exit IP/quality. Option+Return on a highlighted target and named accessibility actions are supported.
+
+Selection is saved locally. Exit IP refreshes every 60 seconds while running and when the target changes. Quality is cached by IP for three days; manual refresh invalidates it. A removed target remains unavailable instead of choosing another exit. A load-balancing group's badge represents that particular probe, not all traffic or AI-service availability.
+
+## Upstream and independent overlay
+
+This revision is based on **FlClash v0.9.5**. Klash retains the application artwork, badge semantics, background monitoring, stable channel and file-picker entitlements. Private upstream module, Core executable and IPC names remain compatibility details rather than product identity. Windows and Android are not Klash distribution targets.
+
+Version mapping adds one to the upstream major and keeps minor/patch: 0.9.5 → 1.9.5, 0.10.0 → 1.10.0. Same-upstream revisions use build metadata such as v1.9.3+2026110601; the app short version remains 1.9.3. See [klash/upstream.json](klash/upstream.json).
+
+The [independent patch](klash/runtime.patch) and explicit file list reconstruct customization from the pinned upstream. Daily stable-release checks stop on conflicts. Compatible candidates require analysis, regression tests, native menu/glyph checks and both macOS builds before merge/publication. Upstream changes may need manual adaptation. Historical workflow filenames remain stable dispatch IDs; their displayed names and artifacts use Klash.
+
+## Build
+
+Current CI pins Flutter 3.50.1, Go 1.27.1 and Xcode 26 SDK; build hooks also require Rust.
+
+~~~sh
+git clone --recursive https://github.com/CodeAIX/Klash.git
+cd Klash
+flutter pub get
+flutter build macos --release --dart-define=KLASH_STATUS_ICON=true --dart-define=APP_ENV=stable
+~~~
+
+Use --dart-define=SAFE_MODE=true for host development so the test client does not take over the current network. KLASH_STATUS_ICON=false restores upstream template tray icons. See [overlay maintenance](klash/README.md).
+
+The 1.9.5 candidate follows FlClash 0.9.5. Its native bridge and validation status are documented in [klash/DEVELOPMENT.md](klash/DEVELOPMENT.md). The latest published release remains 1.9.3+2026111003 until a new release is approved.

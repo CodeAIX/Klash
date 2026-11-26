@@ -303,10 +303,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get sendFromPhonePermissionDenied =>
-      'スマートフォンからリンクを受け取るには、FlClash がローカルネットワークにアクセスするための「付近のデバイス」権限が必要です。アプリの設定でオンにしてください。';
+      'スマートフォンからリンクを受け取るには、Klash がローカルネットワークにアクセスするための「付近のデバイス」権限が必要です。アプリの設定でオンにしてください。';
 
   @override
-  String get sendFromPhonePageTitle => 'FlClash にリンクを送信';
+  String get sendFromPhonePageTitle => 'Klash にリンクを送信';
 
   @override
   String get sendFromPhonePageHint => 'サブスクリプションリンクまたはプロキシ共有リンク';
@@ -321,7 +321,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sendFromPhoneConfirmTitle => 'スマートフォンから届いたリンクをインポートしますか？';
 
   @override
-  String get shareQrcodeTip => '別のデバイスの FlClash でスキャンすると、このプロファイルをインポートできます。';
+  String get shareQrcodeTip => '別のデバイスの Klash でスキャンすると、このプロファイルをインポートできます。';
 
   @override
   String get qrcodeTooLongTip => 'このリンクは長すぎて QR コードにできません。「リンクをコピー」を使ってください。';
@@ -1148,7 +1148,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get disclaimerDesc =>
-      'FlClash（以下「本ソフトウェア」）を使用する前に、本声明をよくお読みのうえ十分に理解してください。「同意する」をタップすると、以下の内容を読み理解したことになります。続行しない場合は「終了」をタップしてください。';
+      'Klash（以下「本ソフトウェア」）を使用する前に、本声明をよくお読みのうえ十分に理解してください。「同意する」をタップすると、以下の内容を読み理解したことになります。続行しない場合は「終了」をタップしてください。';
 
   @override
   String get disclaimerSoftwareTitle => 'ソフトウェアの性質';
@@ -2070,7 +2070,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get helperCorruptTip =>
-      'Helper サービスが利用できないため、TUN モードを有効にできません。FlClash を再インストールしてください。';
+      'Helper サービスが利用できないため、TUN モードを有効にできません。Klash を再インストールしてください。';
 
   @override
   String get tunAuthorizationFailed => 'TUN の権限を取得できなかったため、オフにしました。';
@@ -2080,12 +2080,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String coreBlockedByPolicyTip(Object code) {
-    return 'Windows が FlClashCore.exe の実行を拒否しました（エラー $code）。スマート アプリ コントロールや AppLocker などのアプリ制御ポリシーは未署名のプログラムをブロックします。ポリシーで FlClash を許可するか、ポリシーを無効にしてから再試行してください。';
+    return 'Windows が KlashCore.exe の実行を拒否しました（エラー $code）。スマート アプリ コントロールや AppLocker などのアプリ制御ポリシーは未署名のプログラムをブロックします。ポリシーで Klash を許可するか、ポリシーを無効にしてから再試行してください。';
   }
 
   @override
   String get coreBlockedBySmartAppControlTip =>
-      'Windows のスマート アプリ コントロールが、署名されていない FlClashCore.exe をブロックしました。Windows セキュリティ → アプリとブラウザーの制御 → スマート アプリ コントロールの設定で「オフ」を選び、FlClash を再起動してください。一度オフにすると、Windows を再インストールしない限り再度オンにはできません。';
+      'Windows のスマート アプリ コントロールが、署名されていない KlashCore.exe をブロックしました。Windows セキュリティ → アプリとブラウザーの制御 → スマート アプリ コントロールの設定で「オフ」を選び、Klash を再起動してください。一度オフにすると、Windows を再インストールしない限り再度オンにはできません。';
 
   @override
   String get hideFromList => 'リストから隠す';
@@ -2894,7 +2894,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get initFailedTip =>
-      'FlClash の起動中にエラーが発生したため、続行できません。詳細をコピーして問題を報告できます。繰り返し発生する場合は、データを消去すると起動できるようになることがあります。';
+      'Klash の起動中にエラーが発生したため、続行できません。詳細をコピーして問題を報告できます。繰り返し発生する場合は、データを消去すると起動できるようになることがあります。';
 
   @override
   String get errorDetails => 'エラーの詳細';
@@ -3468,7 +3468,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get mitmEnableTip =>
-      'オンにすると、FlClash は復号するホストに送られるすべての内容（Cookie やパスワードを含む）を読み取れます。書き換えが必要なホストに限ってオンにしてください。';
+      'オンにすると、Klash は復号するホストに送られるすべての内容（Cookie やパスワードを含む）を読み取れます。書き換えが必要なホストに限ってオンにしてください。';
 
   @override
   String get generateCertificate => '証明書を生成';
@@ -3478,7 +3478,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get regenerateCertificateTip =>
-      '新しい証明書が現在の証明書を置き換えます。FlClash は可能な場合、現在の証明書をこのデバイスの信頼されたルートから削除します。現在の証明書を信頼している他のデバイスには、新しい証明書をインストールする必要があります。';
+      '新しい証明書が現在の証明書を置き換えます。Klash は可能な場合、現在の証明書をこのデバイスの信頼されたルートから削除します。現在の証明書を信頼している他のデバイスには、新しい証明書をインストールする必要があります。';
 
   @override
   String get exportCertificate => '証明書をエクスポート';
@@ -3561,7 +3561,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get mitmInstallSystemCaTip =>
-      'root が見つかったため、証明書は Magisk、KernelSU または APatch のモジュール「FlClash MITM CA」としてシステムの信頼できる証明書に追加されます。以後この端末のすべてのアプリが信頼し、秘密鍵を持つ人はこの端末の HTTPS 通信を復号できます。元に戻すには証明書を再生成するか、root マネージャーでモジュールを削除して再起動してください。root が拒否された場合はユーザー証明書としてインストールします。';
+      'root が見つかったため、証明書は Magisk、KernelSU または APatch のモジュール「Klash MITM CA」としてシステムの信頼できる証明書に追加されます。以後この端末のすべてのアプリが信頼し、秘密鍵を持つ人はこの端末の HTTPS 通信を復号できます。元に戻すには証明書を再生成するか、root マネージャーでモジュールを削除して再起動してください。root が拒否された場合はユーザー証明書としてインストールします。';
 
   @override
   String get mitmInstallUserCaTip =>
@@ -3587,7 +3587,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String mitmOldSystemCertificateLeftTip(Object name) {
-    return '古い証明書 $name はシステムの信頼された証明書に残っています。root マネージャーで FlClash に root を許可してから再生成するか、そこで「FlClash MITM CA」モジュールを削除して再起動してください。';
+    return '古い証明書 $name はシステムの信頼された証明書に残っています。root マネージャーで Klash に root を許可してから再生成するか、そこで「Klash MITM CA」モジュールを削除して再起動してください。';
   }
 
   @override
@@ -3619,7 +3619,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String mitmDecryptHostTip(Object host) {
-    return '$host をホスト名リストに追加しますか？FlClash は Cookie やパスワードを含め、このホストに送られる内容を読み取れるようになります。';
+    return '$host をホスト名リストに追加しますか？Klash は Cookie やパスワードを含め、このホストに送られる内容を読み取れるようになります。';
   }
 
   @override
@@ -3931,7 +3931,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get updateNotVerified => 'ダウンロードした更新を検証できませんでした。';
 
   @override
-  String get updateRestartTip => '更新をインストールするため FlClash を終了し、完了後に再び起動します。';
+  String get updateRestartTip => '更新をインストールするため Klash を終了し、完了後に再び起動します。';
 
   @override
   String get updateDownloadFailed => '更新をダウンロードできませんでした。';
@@ -4083,4 +4083,28 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get httpConditionTip => '同じフィールドの条件はいずれか一つ、異なるフィールドの条件はすべてに一致します。';
+
+  @override
+  String get klashMonitorTarget => '監視対象';
+
+  @override
+  String get klashMonitorRules => 'ルーティングルールに従う';
+
+  @override
+  String get klashMonitorGroup => 'このグループを監視・現在';
+
+  @override
+  String get klashMonitorUnavailable => '現在の設定では利用不可';
+
+  @override
+  String get klashMonitorOptions => '監視オプション';
+
+  @override
+  String get klashMonitorRefresh => '出口と品質を更新';
+
+  @override
+  String get klashMonitorSet => '監視対象に設定';
+
+  @override
+  String get klashUpstream => '上流 FlClash';
 }

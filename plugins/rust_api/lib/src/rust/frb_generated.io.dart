@@ -133,6 +133,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
+  TrayAccessory dco_decode_box_autoadd_tray_accessory(dynamic raw);
+
+  @protected
+  TrayBadge dco_decode_box_autoadd_tray_badge(dynamic raw);
+
+  @protected
   TrayContent dco_decode_box_autoadd_tray_content(dynamic raw);
 
   @protected
@@ -217,6 +223,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
 
   @protected
+  TrayAccessory? dco_decode_opt_box_autoadd_tray_accessory(dynamic raw);
+
+  @protected
+  TrayBadge? dco_decode_opt_box_autoadd_tray_badge(dynamic raw);
+
+  @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
@@ -233,6 +245,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   TitleBarStyle dco_decode_title_bar_style(dynamic raw);
+
+  @protected
+  TrayAccessory dco_decode_tray_accessory(dynamic raw);
+
+  @protected
+  TrayBadge dco_decode_tray_badge(dynamic raw);
 
   @protected
   TrayContent dco_decode_tray_content(dynamic raw);
@@ -385,6 +403,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  TrayAccessory sse_decode_box_autoadd_tray_accessory(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  TrayBadge sse_decode_box_autoadd_tray_badge(SseDeserializer deserializer);
+
+  @protected
   TrayContent sse_decode_box_autoadd_tray_content(SseDeserializer deserializer);
 
   @protected
@@ -483,6 +509,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  TrayAccessory? sse_decode_opt_box_autoadd_tray_accessory(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  TrayBadge? sse_decode_opt_box_autoadd_tray_badge(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
@@ -501,6 +537,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   TitleBarStyle sse_decode_title_bar_style(SseDeserializer deserializer);
+
+  @protected
+  TrayAccessory sse_decode_tray_accessory(SseDeserializer deserializer);
+
+  @protected
+  TrayBadge sse_decode_tray_badge(SseDeserializer deserializer);
 
   @protected
   TrayContent sse_decode_tray_content(SseDeserializer deserializer);
@@ -675,6 +717,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_tray_accessory(
+    TrayAccessory self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_tray_badge(
+    TrayBadge self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_tray_content(
     TrayContent self,
     SseSerializer serializer,
@@ -798,6 +852,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_tray_accessory(
+    TrayAccessory? self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_opt_box_autoadd_tray_badge(
+    TrayBadge? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
@@ -820,6 +886,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_title_bar_style(TitleBarStyle self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tray_accessory(TrayAccessory self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_tray_badge(TrayBadge self, SseSerializer serializer);
 
   @protected
   void sse_encode_tray_content(TrayContent self, SseSerializer serializer);

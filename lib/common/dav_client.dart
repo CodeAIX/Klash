@@ -43,8 +43,24 @@ class DAVClient {
   }
 
   Future<void> download(String localPath) async {
-    final bytes = await _transport.get(backupFile);
-    await io.File(localPath).safeWriteAsBytes(bytes);
+    DAVException? firstMissing;
+    for (final candidate in [
+      backupFile,
+      '/Flash/$fileName',
+      '/FlClash/$fileName',
+    ]) {
+      List<int> bytes;
+      try {
+        bytes = await _transport.get(candidate);
+      } on DAVException catch (error) {
+        if (error.statusCode != 404 && error.statusCode != 409) rethrow;
+        firstMissing ??= error;
+        continue;
+      }
+      await io.File(localPath).safeWriteAsBytes(bytes);
+      return;
+    }
+    throw firstMissing!;
   }
 }
 

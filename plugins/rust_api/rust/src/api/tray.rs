@@ -2,8 +2,10 @@ use crate::frb_generated::StreamSink;
 use crate::tray;
 use flutter_rust_bridge::for_generated::SseCodec;
 use flutter_rust_bridge::frb;
+use serde::Serialize;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum TrayItemKind {
     Action,
     Checkbox,
@@ -11,15 +13,31 @@ pub enum TrayItemKind {
     Separator,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct TrayItem {
     pub id: u32,
+    #[serde(rename = "type")]
     pub kind: TrayItemKind,
     pub label: String,
     pub detail: Option<String>,
     pub enabled: bool,
     pub checked: bool,
     pub items: Vec<TrayItem>,
+    pub accessory: Option<TrayAccessory>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct TrayAccessory {
+    pub id: u32,
+    pub label: String,
+    pub selected: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TrayBadge {
+    pub country: String,
+    pub status: String,
+    pub high_quality: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -35,6 +53,7 @@ pub struct TrayImage {
     pub template: bool,
     pub size: u32,
     pub placement: TrayIconPlacement,
+    pub badge: Option<TrayBadge>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

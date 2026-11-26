@@ -301,10 +301,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sendFromPhonePermissionDenied =>
-      '从手机接收链接需要「附近的设备」权限，FlClash 才能访问局域网。请在应用设置中开启。';
+      '从手机接收链接需要「附近的设备」权限，Klash 才能访问局域网。请在应用设置中开启。';
 
   @override
-  String get sendFromPhonePageTitle => '把链接发送到 FlClash';
+  String get sendFromPhonePageTitle => '把链接发送到 Klash';
 
   @override
   String get sendFromPhonePageHint => '订阅链接或代理分享链接';
@@ -319,7 +319,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendFromPhoneConfirmTitle => '导入手机发来的链接？';
 
   @override
-  String get shareQrcodeTip => '在另一台设备上用 FlClash 扫码即可导入此配置。';
+  String get shareQrcodeTip => '在另一台设备上用 Klash 扫码即可导入此配置。';
 
   @override
   String get qrcodeTooLongTip => '链接过长，无法生成二维码，请改用“复制链接”。';
@@ -1144,7 +1144,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get disclaimerDesc =>
-      '在使用 FlClash（以下简称“本软件”）前，请仔细阅读并充分理解本声明。点击“同意”表示你已阅读并理解以下内容；如不想继续，可点击“退出”。';
+      '在使用 Klash（以下简称“本软件”）前，请仔细阅读并充分理解本声明。点击“同意”表示你已阅读并理解以下内容；如不想继续，可点击“退出”。';
 
   @override
   String get disclaimerSoftwareTitle => '软件性质';
@@ -2055,7 +2055,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get inputProxyGroupName => '输入策略组名称';
 
   @override
-  String get helperCorruptTip => 'Helper 服务不可用，无法启用 TUN 模式，请重新安装 FlClash。';
+  String get helperCorruptTip => 'Helper 服务不可用，无法启用 TUN 模式，请重新安装 Klash。';
 
   @override
   String get tunAuthorizationFailed => '虚拟网卡授权失败，已关闭。';
@@ -2065,12 +2065,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String coreBlockedByPolicyTip(Object code) {
-    return 'Windows 拒绝运行 FlClashCore.exe（错误 $code）。智能应用控制、AppLocker 等应用控制策略会拦截未签名程序，请在该策略中放行 FlClash 或关闭策略后重试。';
+    return 'Windows 拒绝运行 KlashCore.exe（错误 $code）。智能应用控制、AppLocker 等应用控制策略会拦截未签名程序，请在该策略中放行 Klash 或关闭策略后重试。';
   }
 
   @override
   String get coreBlockedBySmartAppControlTip =>
-      'Windows 智能应用控制拦截了未签名的 FlClashCore.exe。请打开 Windows 安全中心 → 应用和浏览器控制 → 智能应用控制设置，选择「关闭」后重新启动 FlClash。智能应用控制关闭后无法再开启，除非重装 Windows。';
+      'Windows 智能应用控制拦截了未签名的 KlashCore.exe。请打开 Windows 安全中心 → 应用和浏览器控制 → 智能应用控制设置，选择「关闭」后重新启动 Klash。智能应用控制关闭后无法再开启，除非重装 Windows。';
 
   @override
   String get hideFromList => '从列表中隐藏';
@@ -2868,7 +2868,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get initFailedTip =>
-      'FlClash 启动时出错，无法继续运行。可以复制错误详情用于反馈；如果问题反复出现，清除数据后通常可以重新启动。';
+      'Klash 启动时出错，无法继续运行。可以复制错误详情用于反馈；如果问题反复出现，清除数据后通常可以重新启动。';
 
   @override
   String get errorDetails => '错误详情';
@@ -3431,7 +3431,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mitmEnableTip =>
-      '开启后，FlClash 能读取发往被解密主机的全部内容，包括 Cookie 和密码。请只为需要改写的主机开启。';
+      '开启后，Klash 能读取发往被解密主机的全部内容，包括 Cookie 和密码。请只为需要改写的主机开启。';
 
   @override
   String get generateCertificate => '生成证书';
@@ -3441,7 +3441,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get regenerateCertificateTip =>
-      '新证书会替换当前证书，FlClash 会尽量把当前证书从本机信任的根证书中移除。信任当前证书的其他设备都需要安装新证书。';
+      '新证书会替换当前证书，Klash 会尽量把当前证书从本机信任的根证书中移除。信任当前证书的其他设备都需要安装新证书。';
 
   @override
   String get exportCertificate => '导出证书';
@@ -3522,7 +3522,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mitmInstallSystemCaTip =>
-      '检测到 root，证书将以 Magisk、KernelSU 或 APatch 模块“FlClash MITM CA”加入系统信任的根证书。之后本机所有应用都会信任它，持有其私钥的人可以解密本机的 HTTPS 流量。如需撤销，可重新生成证书，或在 root 管理器中移除该模块并重启。若拒绝 root 授权，将改为安装用户证书。';
+      '检测到 root，证书将以 Magisk、KernelSU 或 APatch 模块“Klash MITM CA”加入系统信任的根证书。之后本机所有应用都会信任它，持有其私钥的人可以解密本机的 HTTPS 流量。如需撤销，可重新生成证书，或在 root 管理器中移除该模块并重启。若拒绝 root 授权，将改为安装用户证书。';
 
   @override
   String get mitmInstallUserCaTip =>
@@ -3548,7 +3548,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String mitmOldSystemCertificateLeftTip(Object name) {
-    return '旧证书 $name 仍在系统信任的证书中。请在 root 管理器中允许 FlClash 使用 root 后重新生成，或在其中移除“FlClash MITM CA”模块并重启。';
+    return '旧证书 $name 仍在系统信任的证书中。请在 root 管理器中允许 Klash 使用 root 后重新生成，或在其中移除“Klash MITM CA”模块并重启。';
   }
 
   @override
@@ -3580,7 +3580,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String mitmDecryptHostTip(Object host) {
-    return '要把 $host 加入主机名列表吗？之后 FlClash 能读取发往它的内容，包括 Cookie 和密码。';
+    return '要把 $host 加入主机名列表吗？之后 Klash 能读取发往它的内容，包括 Cookie 和密码。';
   }
 
   @override
@@ -3887,7 +3887,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateNotVerified => '下载的更新未通过校验。';
 
   @override
-  String get updateRestartTip => 'FlClash 将关闭以安装更新，完成后自动重新打开。';
+  String get updateRestartTip => 'Klash 将关闭以安装更新，完成后自动重新打开。';
 
   @override
   String get updateDownloadFailed => '无法下载更新。';
@@ -4036,4 +4036,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get httpConditionTip => '同一字段的条件满足其一即可，不同字段的都要满足。';
+
+  @override
+  String get klashMonitorTarget => '监测目标';
+
+  @override
+  String get klashMonitorRules => '按分流规则';
+
+  @override
+  String get klashMonitorGroup => '监测此组；当前';
+
+  @override
+  String get klashMonitorUnavailable => '当前配置中不可用';
+
+  @override
+  String get klashMonitorOptions => '监测选项';
+
+  @override
+  String get klashMonitorRefresh => '刷新监测出口与质量';
+
+  @override
+  String get klashMonitorSet => '设为监测目标';
+
+  @override
+  String get klashUpstream => '上游 FlClash';
 }

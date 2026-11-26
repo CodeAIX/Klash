@@ -5,7 +5,7 @@ import 'package:rust_api/rust_api.dart' as rust_api;
 import 'constant.dart';
 import 'print.dart';
 
-const protocolSchemes = ['clash', 'clashmeta', 'flclash'];
+const protocolSchemes = ['klash', 'clash', 'clashmeta', 'flclash'];
 
 /// A user-level desktop entry that claims the schemes for the running binary,
 /// so an AppImage or a development build is reachable without a packaged

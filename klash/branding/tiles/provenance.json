@@ -1,0 +1,19 @@
+{
+  "repository": "chen08209/FlClash",
+  "commit": "8d4f9744948751f1273fe871e1d05276fac09b0e",
+  "source": "macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_{size}.png",
+  "neutral_fill": [
+    250,
+    250,
+    250
+  ],
+  "original_sha256": {
+    "16": "724dd5e1716eada5b6229126e8e091e0d9a4e4c46a28696abb79586f10de130d",
+    "32": "c290c0ade5d2ef4e48332c7acfa8857fd9ad8f069a9527cddf805afccd8ef92b",
+    "64": "3eca7b32256ace58eedb5c620c70b55bf1305ffd5b312c94f95bf5fbaeccf21f",
+    "128": "a9d4816fb92c9348364014b0f19a37fd9d8ddcb065bd0544a04e6962038f1ec7",
+    "256": "a2fd9f8f44f00e745c374cb870f2fc4b35d22e8be7b845fd0f5214006c472a7d",
+    "512": "202d2376e8442d79485bb2760b37e40dcc1f1aa96fb446f221b3694eafddc8fd",
+    "1024": "35f1b19f09ac5782369976d1be68456d53912e52f110fc44d8b71e7af24f8739"
+  }
+}

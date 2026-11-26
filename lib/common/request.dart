@@ -113,7 +113,9 @@ class Request {
   Future<Map<String, dynamic>?> checkForUpdate(UpdateChannel channel) async {
     final release = await newestRelease(channel);
     final remote = ReleaseVersion.tryParse(release['tag_name'] as String);
-    final installed = installedReleaseVersion(globalState.packageInfo.version);
+    final installed = installedReleaseVersion(
+      '${globalState.packageInfo.version}+${globalState.packageInfo.buildNumber}',
+    );
     return remote != null && remote > installed ? release : null;
   }
 

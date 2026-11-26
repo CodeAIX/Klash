@@ -1,10 +1,16 @@
+import 'dart:async';
+import 'klash_monitor.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:rust_api/tray.dart';
+import 'package:riverpod/riverpod.dart';
 
 import 'app_localizations.dart';
+import 'package:fl_clash/providers/outbound_ip.dart';
+import 'package:fl_clash/providers/routed_probe.dart';
+import 'package:fl_clash/providers/ip_quality.dart';
 import 'l10n_labels.dart';
 import 'app_ports.dart';
 import 'constant.dart';
@@ -38,6 +44,10 @@ class AppTray implements TrayPort {
   }) {
     return AppTray._internal(isMacOS: isMacOS, isWindows: isWindows);
   }
+
+  bool get _usesKlashStatusIcon =>
+      isMacOS &&
+      const bool.fromEnvironment('KLASH_STATUS_ICON', defaultValue: true);
 
   String get _trayIconSuffix {
     return isWindows ? 'ico' : 'png';
@@ -93,20 +103,55 @@ class AppTray implements TrayPort {
     if (_isShutDown) {
       return;
     }
+    final klash = _usesKlashStatusIcon && !trayState.safeMode;
+    final entry = klash
+        ? read(
+            outboundIpProbeProvider,
+          ).entryOf(read(klashMonitorTargetProvider))
+        : null;
+    final running = trayState.isStart && !trayState.suspended;
+    final ip = running && entry?.phase == ProbePhase.fresh
+        ? entry?.value?.ip
+        : null;
+    final qualityResult = ip != null ? read(ipQualityProvider(ip)) : null;
+    final quality =
+        qualityResult != null &&
+            !qualityResult.isLoading &&
+            !qualityResult.hasError
+        ? qualityResult.value
+        : null;
+    final excellent =
+        quality?.ip == ip && quality?.level == IpQualityLevel.good;
+    final status = !running
+        ? 'stopped'
+        : entry?.phase == ProbePhase.failed
+        ? 'failed'
+        : trayState.tunEnable
+        ? 'tun'
+        : trayState.systemProxy
+        ? 'route'
+        : 'entry';
+    final country = running && entry?.phase == ProbePhase.fresh
+        ? entry?.value?.countryCode.toUpperCase() ?? '--'
+        : '--';
     await Tray.instance.show(
       TraySpec(
-        icon: TrayIcon.asset(
-          getTrayIcon(
-            isStart: trayState.isStart && !trayState.suspended,
-            tunEnable: trayState.tunEnable,
-            safeMode: trayState.safeMode,
-            monochrome: trayState.monochromeTrayIcon,
-          ),
-          isTemplate: _isTemplate(trayState.monochromeTrayIcon),
-          size: isMacOS ? 18 : 16,
-        ),
+        icon: klash
+            ? TrayIcon.status(country, status, isHighQuality: excellent)
+            : TrayIcon.asset(
+                getTrayIcon(
+                  isStart: trayState.isStart && !trayState.suspended,
+                  tunEnable: trayState.tunEnable,
+                  safeMode: trayState.safeMode,
+                  monochrome: trayState.monochromeTrayIcon,
+                ),
+                isTemplate: _isTemplate(trayState.monochromeTrayIcon),
+                size: isMacOS ? 18 : 16,
+              ),
         toolTip: trayState.safeMode
             ? currentAppLocalizations.safeModeAppTitle(appName)
+            : klash
+            ? 'Klash • ${read(klashMonitorTargetProvider).isEmpty ? currentAppLocalizations.klashMonitorRules : read(klashMonitorTargetProvider)} • ${ip ?? '—'} • $country • $status'
             : appName,
         menu: _buildMenu(trayState: trayState, read: read),
       ),
@@ -164,11 +209,12 @@ class AppTray implements TrayPort {
           checked: trayState.showTrayTitle,
           onSelected: commonAction.updateSpeedStatistics,
         ),
-        TrayMenuCheckbox(
-          label: appLocalizations.monochromeIcon,
-          checked: trayState.monochromeTrayIcon,
-          onSelected: commonAction.updateMonochromeTrayIcon,
-        ),
+        if (!_usesKlashStatusIcon)
+          TrayMenuCheckbox(
+            label: appLocalizations.monochromeIcon,
+            checked: trayState.monochromeTrayIcon,
+            onSelected: commonAction.updateMonochromeTrayIcon,
+          ),
       ],
       const TrayMenuSeparator(),
       for (final mode in Mode.values)
@@ -212,6 +258,37 @@ class AppTray implements TrayPort {
         onSelected: systemAction.copyProxyEnv,
       ),
       const TrayMenuSeparator(),
+      if (_usesKlashStatusIcon && !trayState.safeMode) ...[
+        TrayMenuSubmenu(
+          label: appLocalizations.klashMonitorOptions,
+          items: [
+            TrayMenuAction(
+              label:
+                  '${appLocalizations.klashMonitorTarget}: ${read(klashMonitorTargetProvider).isEmpty ? appLocalizations.klashMonitorRules : read(klashMonitorTargetProvider)}',
+              enabled: false,
+            ),
+            TrayMenuCheckbox(
+              label: appLocalizations.klashMonitorRules,
+              checked: read(klashMonitorTargetProvider).isEmpty,
+              onSelected: () => unawaited(
+                read(klashMonitorTargetProvider.notifier).select(''),
+              ),
+            ),
+            TrayMenuAction(
+              label: appLocalizations.klashMonitorRefresh,
+              onSelected: () {
+                final target = read(klashMonitorTargetProvider);
+                final ip = read(
+                  outboundIpProbeProvider,
+                ).entryOf(target).value?.ip;
+                read(outboundIpProbeProvider.notifier).refresh([target]);
+                if (ip != null) refreshKlashQuality(read, ip).ignore();
+              },
+            ),
+          ],
+        ),
+        const TrayMenuSeparator(),
+      ],
       exitItem,
     ];
   }
@@ -250,6 +327,15 @@ class AppTray implements TrayPort {
       for (final group in trayState.groups)
         _buildGroupSubmenu(
           group,
+          monitor: _usesKlashStatusIcon && !trayState.safeMode
+              ? (name) => TrayMenuAccessory(
+                  label: '${currentAppLocalizations.klashMonitorSet}: $name',
+                  selected: read(klashMonitorTargetProvider) == name,
+                  onSelected: () => unawaited(
+                    read(klashMonitorTargetProvider.notifier).select(name),
+                  ),
+                )
+              : null,
           selectedName: read(selectedProxyNameProvider(group.name)),
           delays: delays[group.name] ?? const {},
           onSelected: (proxyName) {
@@ -272,17 +358,20 @@ class AppTray implements TrayPort {
 
   TrayMenuSubmenu _buildGroupSubmenu(
     Group group, {
+    TrayMenuAccessory Function(String)? monitor,
     required String? selectedName,
     required Map<String, int> delays,
     required void Function(String proxyName) onSelected,
   }) {
     return TrayMenuSubmenu(
       label: group.name,
+      accessory: monitor?.call(group.name),
       detail: _delayText(delays[selectedName]),
       items: [
         for (final proxy in group.all)
           TrayMenuCheckbox(
             label: proxy.name,
+            accessory: monitor?.call(proxy.name),
             checked: selectedName == proxy.name,
             detail: _delayText(delays[proxy.name]),
             onSelected: () {

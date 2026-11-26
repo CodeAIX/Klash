@@ -1,3 +1,4 @@
+mod klash;
 mod menu;
 mod status;
 
@@ -6,7 +7,7 @@ use block2::RcBlock;
 use menu::TrayMenu;
 use objc2::rc::Retained;
 use objc2::MainThreadMarker;
-use objc2_app_kit::NSStatusItem;
+use objc2_app_kit::{NSMenu, NSStatusItem};
 use objc2_foundation::NSRunLoop;
 use status::StatusItem;
 use std::cell::RefCell;
@@ -17,7 +18,7 @@ thread_local! {
 
 struct Tray {
     status: StatusItem,
-    menu: Option<Retained<TrayMenu>>,
+    menu: Option<Retained<NSMenu>>,
 }
 
 // Every entry point is a synchronous bridge call, which Flutter runs on the
@@ -43,7 +44,11 @@ pub fn show(content: TrayContent) -> Result<(), String> {
         };
         tray.status.set_image(&image, content.image.placement);
         tray.status.set_title(&content.title);
-        tray.menu = Some(TrayMenu::new(mtm, &content.menu, true));
+        tray.menu = Some(if klash::has_accessory(&content.menu) {
+            klash::menu(&content.menu)?
+        } else {
+            Retained::into_super(TrayMenu::new(mtm, &content.menu, true))
+        });
         Ok(())
     })
 }
@@ -131,6 +136,7 @@ mod tests {
                 template: true,
                 size: 18,
                 placement: TrayIconPlacement::Leading,
+                badge: None,
             },
             tool_tip: String::new(),
             title: String::new(),

@@ -19,7 +19,8 @@ String _read(String relative) =>
 /// Packages every row of the release matrix in build.yaml the way CI does,
 /// with each file holding its own name, and merges them into [directory].
 Future<void> _writeRelease(String directory) async {
-  final workflow = loadYaml(_read('.github/workflows/build.yaml')) as YamlMap;
+  final workflow =
+      loadYaml(_read('.github/upstream-workflows/build.yaml')) as YamlMap;
   final rows =
       (((workflow['jobs'] as YamlMap)['build'] as YamlMap)['strategy']
               as YamlMap)['matrix']['include']

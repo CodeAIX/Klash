@@ -44,7 +44,7 @@ String nightlyReleaseVersion(
   return '$base-$channel.$day.${commit.substring(0, 7)}';
 }
 
-final _version = RegExp(r'^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$');
+final _version = RegExp(r'^\d+\.\d+\.\d+(?:\.\d+)?(-[0-9A-Za-z.]+)?$');
 
 String _checkedVersion(String version) {
   if (!_version.hasMatch(version)) {
@@ -109,22 +109,26 @@ SelfUpdateAsset? selfUpdateAssetFor(Abi abi, {required bool replaceable}) {
 }
 
 String updateAssetName(String tag, SelfUpdateAsset asset) {
-  return releaseAssetName(
-    version: releaseVersionOfTag(tag),
-    os: asset.os,
-    arch: asset.arch,
-    form: asset.form,
-    extension: asset.extension,
-  );
+  final arch = asset.os == ReleaseOs.macos && asset.arch == ReleaseArch.amd64
+      ? 'x86_64'
+      : asset.arch.name;
+  final parts = [
+    'Klash',
+    _checkedVersion(releaseVersionOfTag(tag)),
+    asset.os.name,
+    arch,
+    ?asset.form?.name,
+  ];
+  return '${parts.join('-')}.${asset.extension}';
 }
 
-/// False for a tag such as `nightly`, `v1.2.0-beta-1` or a stable rebuild
-/// `v1.2.0+1`, which no release file can be named after.
+/// False for a tag such as `nightly`, `v1.2.0-beta-1` or a path-bearing tag.
 bool namesReleaseFiles(String tag) =>
     _version.hasMatch(releaseVersionOfTag(tag));
 
 String updateChecksumsName(String tag) {
-  return releaseChecksumsName(releaseVersionOfTag(tag));
+  _checkedVersion(releaseVersionOfTag(tag));
+  return 'SHA256SUMS';
 }
 
 final _checksumLine = RegExp(r'^([0-9a-fA-F]{64}) [ *](.+)$');

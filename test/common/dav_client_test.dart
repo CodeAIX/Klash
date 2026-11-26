@@ -294,6 +294,102 @@ void main() {
       expect(File(target).readAsBytesSync(), payload);
     });
 
+    test('Klash backup takes priority over both previous clients', () async {
+      server.files['/Klash/backup.zip'] = [1];
+      server.files['/Flash/backup.zip'] = [2];
+      server.files['/FlClash/backup.zip'] = [3];
+      final target = join(root.path, 'priority.zip');
+      await buildClient().download(target);
+      expect(File(target).readAsBytesSync(), [1]);
+      expect(server.requests.map((r) => r.path), ['/Klash/backup.zip']);
+    });
+
+    for (final status in [404, 409]) {
+      for (final legacy in ['Flash', 'FlClash']) {
+        test('reads $legacy after Klash GET returns $status', () async {
+          server.responses.add((
+            method: 'GET',
+            status: status,
+            headers: const {},
+          ));
+          server.files['/$legacy/backup.zip'] = [4, 5, 6];
+          final target = join(root.path, 'legacy-$legacy-$status.zip');
+          await buildClient().download(target);
+          expect(File(target).readAsBytesSync(), [4, 5, 6]);
+          expect(server.requests.every((r) => r.method == 'GET'), isTrue);
+          expect(server.requests.map((r) => r.path), [
+            '/Klash/backup.zip',
+            '/Flash/backup.zip',
+            if (legacy == 'FlClash') '/FlClash/backup.zip',
+          ]);
+        });
+      }
+    }
+
+    test('Flash backup takes priority over FlClash', () async {
+      server.files['/Flash/backup.zip'] = [2];
+      server.files['/FlClash/backup.zip'] = [3];
+      final target = join(root.path, 'flash-priority.zip');
+      await buildClient().download(target);
+      expect(File(target).readAsBytesSync(), [2]);
+      expect(server.requests, hasLength(2));
+    });
+
+    for (final status in [401, 403, 429, 500]) {
+      for (final missing in [0, 1]) {
+        test(
+          'does not skip error $status at fallback position $missing',
+          () async {
+            if (missing == 1) {
+              server.responses.add((
+                method: 'GET',
+                status: 404,
+                headers: const {},
+              ));
+            }
+            server.responses.add((
+              method: 'GET',
+              status: status,
+              headers: const {},
+            ));
+            server.files['/FlClash/backup.zip'] = [2];
+            await expectLater(
+              buildClient().download(join(root.path, 'denied.zip')),
+              throwsA(
+                isA<DAVException>().having(
+                  (e) => e.statusCode,
+                  'status',
+                  status,
+                ),
+              ),
+            );
+            expect(server.requests, hasLength(missing + 1));
+          },
+        );
+      }
+    }
+
+    test('legacy fallback keeps the configured WebDAV base path', () async {
+      server.files['/dav/FlClash/backup.zip'] = [7];
+      final target = join(root.path, 'base-legacy.zip');
+      await buildClient(path: '/dav/').download(target);
+      expect(File(target).readAsBytesSync(), [7]);
+      expect(server.requests.map((r) => r.path), [
+        '/dav/Klash/backup.zip',
+        '/dav/Flash/backup.zip',
+        '/dav/FlClash/backup.zip',
+      ]);
+    });
+
+    test('failed fallback preserves the original conflict', () async {
+      server.responses.add((method: 'GET', status: 409, headers: const {}));
+      await expectLater(
+        buildClient().download(join(root.path, 'conflict.zip')),
+        throwsA(isA<DAVException>().having((e) => e.statusCode, 'status', 409)),
+      );
+      expect(server.requests.map((r) => r.method), ['GET', 'GET', 'GET']);
+    });
+
     test('download reports the status the server sent', () async {
       await expectLater(
         buildClient().download(join(root.path, 'missing.zip')),

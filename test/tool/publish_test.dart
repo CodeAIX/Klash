@@ -215,7 +215,9 @@ void main() {
 
   YamlList releaseSteps() {
     final workflow =
-        loadYaml(File('.github/workflows/build.yaml').readAsStringSync())
+        loadYaml(
+              File('.github/upstream-workflows/build.yaml').readAsStringSync(),
+            )
             as YamlMap;
     return workflow['jobs']['upload']['steps'] as YamlList;
   }

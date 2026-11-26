@@ -693,13 +693,13 @@ abstract class AppLocalizations {
   /// No description provided for @sendFromPhonePermissionDenied.
   ///
   /// In en, this message translates to:
-  /// **'Receiving a link from your phone needs the Nearby devices permission, which lets FlClash reach the local network. Turn it on in the app\'s settings.'**
+  /// **'Receiving a link from your phone needs the Nearby devices permission, which lets Klash reach the local network. Turn it on in the app\'s settings.'**
   String get sendFromPhonePermissionDenied;
 
   /// No description provided for @sendFromPhonePageTitle.
   ///
   /// In en, this message translates to:
-  /// **'Send a link to FlClash'**
+  /// **'Send a link to Klash'**
   String get sendFromPhonePageTitle;
 
   /// No description provided for @sendFromPhonePageHint.
@@ -729,7 +729,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareQrcodeTip.
   ///
   /// In en, this message translates to:
-  /// **'Scan with FlClash on another device to import this profile.'**
+  /// **'Scan with Klash on another device to import this profile.'**
   String get shareQrcodeTip;
 
   /// No description provided for @qrcodeTooLongTip.
@@ -2331,7 +2331,7 @@ abstract class AppLocalizations {
   /// No description provided for @disclaimerDesc.
   ///
   /// In en, this message translates to:
-  /// **'Before using FlClash (\"the Software\"), please read this statement carefully and make sure you understand it. Tapping \"Agree\" means you have read and understood what follows. If you do not want to continue, tap \"Exit\".'**
+  /// **'Before using Klash (\"the Software\"), please read this statement carefully and make sure you understand it. Tapping \"Agree\" means you have read and understood what follows. If you do not want to continue, tap \"Exit\".'**
   String get disclaimerDesc;
 
   /// No description provided for @disclaimerSoftwareTitle.
@@ -3999,7 +3999,7 @@ abstract class AppLocalizations {
   /// No description provided for @helperCorruptTip.
   ///
   /// In en, this message translates to:
-  /// **'Helper service unavailable; TUN mode cannot be enabled. Reinstall FlClash to restore it.'**
+  /// **'Helper service unavailable; TUN mode cannot be enabled. Reinstall Klash to restore it.'**
   String get helperCorruptTip;
 
   /// No description provided for @tunAuthorizationFailed.
@@ -4017,13 +4017,13 @@ abstract class AppLocalizations {
   /// No description provided for @coreBlockedByPolicyTip.
   ///
   /// In en, this message translates to:
-  /// **'Windows refused to run FlClashCore.exe (error {code}). An app control policy such as Smart App Control or AppLocker blocks unsigned programs; allow FlClash in that policy or turn it off, then try again.'**
+  /// **'Windows refused to run KlashCore.exe (error {code}). An app control policy such as Smart App Control or AppLocker blocks unsigned programs; allow Klash in that policy or turn it off, then try again.'**
   String coreBlockedByPolicyTip(Object code);
 
   /// No description provided for @coreBlockedBySmartAppControlTip.
   ///
   /// In en, this message translates to:
-  /// **'Windows Smart App Control blocked FlClashCore.exe because it is not signed. Open Windows Security → App & browser control → Smart App Control settings, choose Off, then start FlClash again. Smart App Control cannot be turned back on without reinstalling Windows.'**
+  /// **'Windows Smart App Control blocked KlashCore.exe because it is not signed. Open Windows Security → App & browser control → Smart App Control settings, choose Off, then start Klash again. Smart App Control cannot be turned back on without reinstalling Windows.'**
   String get coreBlockedBySmartAppControlTip;
 
   /// No description provided for @hideFromList.
@@ -5457,7 +5457,7 @@ abstract class AppLocalizations {
   /// No description provided for @initFailedTip.
   ///
   /// In en, this message translates to:
-  /// **'FlClash ran into an error while starting and can\'t continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.'**
+  /// **'Klash ran into an error while starting and can\'t continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.'**
   String get initFailedTip;
 
   /// No description provided for @errorDetails.
@@ -6483,7 +6483,7 @@ abstract class AppLocalizations {
   /// No description provided for @mitmEnableTip.
   ///
   /// In en, this message translates to:
-  /// **'FlClash will be able to read everything sent to the decrypted hosts, cookies and passwords included. Turn this on only for hosts you mean to rewrite.'**
+  /// **'Klash will be able to read everything sent to the decrypted hosts, cookies and passwords included. Turn this on only for hosts you mean to rewrite.'**
   String get mitmEnableTip;
 
   /// No description provided for @generateCertificate.
@@ -6501,7 +6501,7 @@ abstract class AppLocalizations {
   /// No description provided for @regenerateCertificateTip.
   ///
   /// In en, this message translates to:
-  /// **'The new certificate replaces the current one, which FlClash takes out of this device\'s trusted roots where it can. Every other device that trusts the current one has to install the new one.'**
+  /// **'The new certificate replaces the current one, which Klash takes out of this device\'s trusted roots where it can. Every other device that trusts the current one has to install the new one.'**
   String get regenerateCertificateTip;
 
   /// No description provided for @exportCertificate.
@@ -6639,7 +6639,7 @@ abstract class AppLocalizations {
   /// No description provided for @mitmInstallSystemCaTip.
   ///
   /// In en, this message translates to:
-  /// **'Root was found, so the certificate goes into the system\'s trusted certificates as a FlClash MITM CA module for Magisk, KernelSU or APatch. Every app on this device will then trust it, and anyone holding its private key could decrypt this device\'s HTTPS traffic. To undo it, regenerate the certificate or remove the module in the root manager and restart. If root is denied, it is installed as a user certificate instead.'**
+  /// **'Root was found, so the certificate goes into the system\'s trusted certificates as a Klash MITM CA module for Magisk, KernelSU or APatch. Every app on this device will then trust it, and anyone holding its private key could decrypt this device\'s HTTPS traffic. To undo it, regenerate the certificate or remove the module in the root manager and restart. If root is denied, it is installed as a user certificate instead.'**
   String get mitmInstallSystemCaTip;
 
   /// No description provided for @mitmInstallUserCaTip.
@@ -6675,7 +6675,7 @@ abstract class AppLocalizations {
   /// No description provided for @mitmOldSystemCertificateLeftTip.
   ///
   /// In en, this message translates to:
-  /// **'The old certificate, {name}, is still among the system\'s trusted CAs. Allow FlClash root access in your root manager and regenerate, or remove the FlClash MITM CA module there and restart.'**
+  /// **'The old certificate, {name}, is still among the system\'s trusted CAs. Allow Klash root access in your root manager and regenerate, or remove the Klash MITM CA module there and restart.'**
   String mitmOldSystemCertificateLeftTip(Object name);
 
   /// No description provided for @removeCertificate.
@@ -6729,7 +6729,7 @@ abstract class AppLocalizations {
   /// No description provided for @mitmDecryptHostTip.
   ///
   /// In en, this message translates to:
-  /// **'Add {host} to the hostname list? FlClash can then read what is sent to it, cookies and passwords included.'**
+  /// **'Add {host} to the hostname list? Klash can then read what is sent to it, cookies and passwords included.'**
   String mitmDecryptHostTip(Object host);
 
   /// No description provided for @mitmClientRefusedCertificate.
@@ -7263,7 +7263,7 @@ abstract class AppLocalizations {
   /// No description provided for @updateRestartTip.
   ///
   /// In en, this message translates to:
-  /// **'FlClash closes to install the update and opens again when it is done.'**
+  /// **'Klash closes to install the update and opens again when it is done.'**
   String get updateRestartTip;
 
   /// No description provided for @updateDownloadFailed.
@@ -7529,6 +7529,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Conditions on one field match any of them, on different fields all.'**
   String get httpConditionTip;
+
+  /// No description provided for @klashMonitorTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor target'**
+  String get klashMonitorTarget;
+
+  /// No description provided for @klashMonitorRules.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow routing rules'**
+  String get klashMonitorRules;
+
+  /// No description provided for @klashMonitorGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor this group; current'**
+  String get klashMonitorGroup;
+
+  /// No description provided for @klashMonitorUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable in current profile'**
+  String get klashMonitorUnavailable;
+
+  /// No description provided for @klashMonitorOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitoring options'**
+  String get klashMonitorOptions;
+
+  /// No description provided for @klashMonitorRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh monitored exit and quality'**
+  String get klashMonitorRefresh;
+
+  /// No description provided for @klashMonitorSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Monitor this target'**
+  String get klashMonitorSet;
+
+  /// No description provided for @klashUpstream.
+  ///
+  /// In en, this message translates to:
+  /// **'Upstream FlClash'**
+  String get klashUpstream;
 }
 
 class _AppLocalizationsDelegate

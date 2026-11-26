@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 Stream<TraySignal> traySignals() =>
     RustLib.instance.api.crateApiTrayTraySignals();
@@ -20,6 +20,54 @@ bool setTrayTitle({required String title}) =>
 void hideTray() => RustLib.instance.api.crateApiTrayHideTray();
 
 bool openTrayMenu() => RustLib.instance.api.crateApiTrayOpenTrayMenu();
+
+class TrayAccessory {
+  final int id;
+  final String label;
+  final bool selected;
+
+  const TrayAccessory({
+    required this.id,
+    required this.label,
+    required this.selected,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ label.hashCode ^ selected.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TrayAccessory &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          label == other.label &&
+          selected == other.selected;
+}
+
+class TrayBadge {
+  final String country;
+  final String status;
+  final bool highQuality;
+
+  const TrayBadge({
+    required this.country,
+    required this.status,
+    required this.highQuality,
+  });
+
+  @override
+  int get hashCode => country.hashCode ^ status.hashCode ^ highQuality.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TrayBadge &&
+          runtimeType == other.runtimeType &&
+          country == other.country &&
+          status == other.status &&
+          highQuality == other.highQuality;
+}
 
 class TrayContent {
   final String id;
@@ -64,6 +112,7 @@ class TrayImage {
   final bool template;
   final int size;
   final TrayIconPlacement placement;
+  final TrayBadge? badge;
 
   const TrayImage({
     required this.path,
@@ -71,6 +120,7 @@ class TrayImage {
     required this.template,
     required this.size,
     required this.placement,
+    this.badge,
   });
 
   @override
@@ -79,7 +129,8 @@ class TrayImage {
       pngs.hashCode ^
       template.hashCode ^
       size.hashCode ^
-      placement.hashCode;
+      placement.hashCode ^
+      badge.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -90,7 +141,8 @@ class TrayImage {
           pngs == other.pngs &&
           template == other.template &&
           size == other.size &&
-          placement == other.placement;
+          placement == other.placement &&
+          badge == other.badge;
 }
 
 class TrayItem {
@@ -101,6 +153,7 @@ class TrayItem {
   final bool enabled;
   final bool checked;
   final List<TrayItem> items;
+  final TrayAccessory? accessory;
 
   const TrayItem({
     required this.id,
@@ -110,6 +163,7 @@ class TrayItem {
     required this.enabled,
     required this.checked,
     required this.items,
+    this.accessory,
   });
 
   @override
@@ -120,7 +174,8 @@ class TrayItem {
       detail.hashCode ^
       enabled.hashCode ^
       checked.hashCode ^
-      items.hashCode;
+      items.hashCode ^
+      accessory.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -133,7 +188,8 @@ class TrayItem {
           detail == other.detail &&
           enabled == other.enabled &&
           checked == other.checked &&
-          items == other.items;
+          items == other.items &&
+          accessory == other.accessory;
 }
 
 enum TrayItemKind { action, checkbox, submenu, separator }

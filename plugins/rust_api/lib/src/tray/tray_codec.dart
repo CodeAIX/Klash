@@ -27,12 +27,35 @@ abstract final class TrayCodec {
       itemsById: itemsById,
       signature: jsonEncode(<Object?>[
         spec.icon.asset,
+        spec.icon.country,
+        spec.icon.status,
+        spec.icon.isHighQuality,
         spec.icon.isTemplate,
         spec.icon.size,
         spec.icon.position.name,
         spec.toolTip,
         _describe(menu),
       ]),
+    );
+  }
+
+  static TrayAccessory? _encodeAccessory(
+    TrayMenuAccessory? accessory,
+    bool enabled,
+    Map<int, TrayMenuItem> sink,
+    _IdAllocator allocator,
+  ) {
+    if (accessory == null) return null;
+    final id = allocator.next();
+    sink[id] = TrayMenuAction(
+      label: accessory.label,
+      enabled: enabled,
+      onSelected: accessory.onSelected,
+    );
+    return TrayAccessory(
+      id: id,
+      label: accessory.label,
+      selected: accessory.selected,
     );
   }
 
@@ -63,6 +86,7 @@ abstract final class TrayCodec {
           items: const [],
         ),
         TrayMenuCheckbox(
+          :final accessory,
           :final label,
           :final detail,
           :final enabled,
@@ -71,6 +95,7 @@ abstract final class TrayCodec {
           TrayItem(
             id: id,
             kind: TrayItemKind.checkbox,
+            accessory: _encodeAccessory(accessory, enabled, sink, allocator),
             label: label,
             detail: _detail(detail),
             enabled: enabled,
@@ -78,6 +103,7 @@ abstract final class TrayCodec {
             items: const [],
           ),
         TrayMenuSubmenu(
+          :final accessory,
           :final label,
           :final detail,
           :final enabled,
@@ -86,6 +112,7 @@ abstract final class TrayCodec {
           TrayItem(
             id: id,
             kind: TrayItemKind.submenu,
+            accessory: _encodeAccessory(accessory, enabled, sink, allocator),
             label: label,
             detail: _detail(detail),
             enabled: enabled,
@@ -110,6 +137,8 @@ abstract final class TrayCodec {
           item.detail,
           item.enabled,
           item.checked,
+          if (item.accessory case final accessory?)
+            [accessory.id, accessory.label, accessory.selected],
           _describe(item.items),
         ],
     ];

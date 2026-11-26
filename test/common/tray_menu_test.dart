@@ -241,11 +241,14 @@ void main() {
     expect(host.shown, hasLength(1));
 
     final content = host.shown.single;
-    expect(content.toolTip, appName);
+    expect(
+      content.toolTip,
+      contains(currentAppLocalizations.klashMonitorRules),
+    );
     expect(content.menu, isNotEmpty);
-    expect(content.image.pngs, hasLength(Tray.variantScales.length));
-    expect(content.image.pngs, everyElement(isNotEmpty));
-    expect(content.image.template, isTrue);
+    expect(content.image.badge!.status, 'tun');
+    expect(content.image.pngs, isEmpty);
+    expect(content.image.template, isFalse);
   });
 
   test('ships the color status icon once monochrome is off', () async {
@@ -255,13 +258,10 @@ void main() {
 
     final content = showCall()!;
     expect(content.image.template, isFalse);
+    expect(content.image.badge!.status, 'tun');
     expect(
-      content.image.pngs.first,
-      File('assets/images/tray/unix/status_3.png').readAsBytesSync(),
-    );
-    expect(
-      _item(showCall(), currentAppLocalizations.monochromeIcon)['checked'],
-      isFalse,
+      _labels(showCall()),
+      isNot(contains(currentAppLocalizations.monochromeIcon)),
     );
   });
 

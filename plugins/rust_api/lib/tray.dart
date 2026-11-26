@@ -3,6 +3,8 @@ library;
 export 'src/rust/api/tray.dart'
     show
         TrayContent,
+        TrayBadge,
+        TrayAccessory,
         TrayIconPlacement,
         TrayImage,
         TrayItem,

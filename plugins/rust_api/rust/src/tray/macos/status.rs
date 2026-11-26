@@ -24,6 +24,9 @@ const TITLE_FONT_SIZE: f64 = 8.75;
 const TITLE_LINE_HEIGHT: f64 = 9.0;
 
 pub(super) fn image(spec: &TrayImage) -> Option<Retained<NSImage>> {
+    if let Some(badge) = &spec.badge {
+        return super::klash::image(badge);
+    }
     let size = NSSize::new(f64::from(spec.size), f64::from(spec.size));
     let image = NSImage::initWithSize(NSImage::alloc(), size);
     for png in &spec.pngs {

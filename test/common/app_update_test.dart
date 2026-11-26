@@ -17,26 +17,26 @@ void main() {
     test('names the APK built for the running ABI', () {
       expect(
         nameOn(Abi.androidArm64, replaceable: false),
-        'FlClash-0.9.4-android-arm64.apk',
+        'Klash-0.9.4-android-arm64.apk',
       );
       expect(
         nameOn(Abi.androidArm, replaceable: false),
-        'FlClash-0.9.4-android-armv7.apk',
+        'Klash-0.9.4-android-armv7.apk',
       );
       expect(
         nameOn(Abi.androidX64, replaceable: false),
-        'FlClash-0.9.4-android-amd64.apk',
+        'Klash-0.9.4-android-amd64.apk',
       );
     });
 
     test('names the Windows installer only for an installed build', () {
       expect(
         nameOn(Abi.windowsX64, replaceable: true),
-        'FlClash-0.9.4-windows-amd64-setup.exe',
+        'Klash-0.9.4-windows-amd64-setup.exe',
       );
       expect(
         nameOn(Abi.windowsArm64, replaceable: true),
-        'FlClash-0.9.4-windows-arm64-setup.exe',
+        'Klash-0.9.4-windows-arm64-setup.exe',
       );
       expect(nameOn(Abi.windowsX64, replaceable: false), isNull);
     });
@@ -44,11 +44,11 @@ void main() {
     test('names the macOS dmg only for a bundle the updater can replace', () {
       expect(
         nameOn(Abi.macosArm64, replaceable: true),
-        'FlClash-0.9.4-macos-arm64.dmg',
+        'Klash-0.9.4-macos-arm64.dmg',
       );
       expect(
         nameOn(Abi.macosX64, replaceable: true),
-        'FlClash-0.9.4-macos-amd64.dmg',
+        'Klash-0.9.4-macos-x86_64.dmg',
       );
       expect(nameOn(Abi.macosArm64, replaceable: false), isNull);
     });
@@ -65,12 +65,19 @@ void main() {
 
     expect(
       updateAssetName('v0.9.4-pre.1+2', asset),
-      'FlClash-0.9.4-pre.1.2-android-arm64.apk',
+      'Klash-0.9.4-pre.1.2-android-arm64.apk',
     );
+    expect(updateChecksumsName('v0.9.4-pre.1+2'), 'SHA256SUMS');
+  });
+
+  test('a stable repair keeps its build number in the package filename', () {
+    final asset = selfUpdateAssetFor(Abi.macosX64, replaceable: true)!;
     expect(
-      updateChecksumsName('v0.9.4-pre.1+2'),
-      'FlClash-0.9.4-pre.1.2-SHA256SUMS',
+      updateAssetName('v1.9.5+2026112602', asset),
+      'Klash-1.9.5.2026112602-macos-x86_64.dmg',
     );
+    expect(updateChecksumsName('v1.9.5+2026112602'), 'SHA256SUMS');
+    expect(namesReleaseFiles('v1.9.5+2026112602'), isTrue);
   });
 
   group('releaseChecksum', () {
@@ -79,10 +86,10 @@ void main() {
 
     test('reads the entry sha256sum wrote for a file', () {
       final sums =
-          '$digest  FlClash-0.9.5-android-arm64.apk\n'
-          '${'0' * 64}  FlClash-0.9.5-windows-amd64-setup.exe\n';
+          '$digest  Klash-0.9.5-android-arm64.apk\n'
+          '${'0' * 64}  Klash-0.9.5-windows-amd64-setup.exe\n';
 
-      expect(releaseChecksum(sums, 'FlClash-0.9.5-android-arm64.apk'), digest);
+      expect(releaseChecksum(sums, 'Klash-0.9.5-android-arm64.apk'), digest);
     });
 
     test('accepts the binary marker, upper case and CRLF', () {

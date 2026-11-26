@@ -1,4 +1,10 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/providers/ip_quality.dart';
+import 'package:fl_clash/providers/outbound_ip.dart';
+import 'package:fl_clash/providers/routed_probe.dart';
 
 import 'package:fl_clash/common/app_localizations.dart';
 import 'package:fl_clash/manager/locale_manager.dart';
@@ -82,6 +88,69 @@ void main() {
   tearDown(() {
     container.dispose();
   });
+
+  testWidgets(
+    'quality completion refreshes the tray and disposal releases its listener',
+    (tester) async {
+      final answer = Completer<IpQuality>();
+      var released = false;
+      container = ProviderContainer(
+        overrides: [
+          profilesProvider.overrideWith(TestProfiles.new),
+          systemActionProvider.overrideWith(_RecordingSystemAction.new),
+          trayStateProvider.overrideWith(
+            (ref) => const TrayState(
+              mode: Mode.rule,
+              port: 7890,
+              autoLaunch: false,
+              systemProxy: true,
+              tunEnable: false,
+              isStart: true,
+              groups: [],
+              selectedMap: {},
+              showTrayTitle: false,
+              safeMode: false,
+            ),
+          ),
+          outboundIpProbeProvider.overrideWithBuild(
+            (_, _) => const RoutedProbeState({
+              '': ProbeEntry(
+                phase: ProbePhase.fresh,
+                value: IpInfo(ip: '2.2.2.2', countryCode: 'JP'),
+              ),
+            }),
+          ),
+          ipQualityProvider('2.2.2.2').overrideWith((ref) {
+            ref.onCancel(() => released = true);
+            return answer.future;
+          }),
+        ],
+      );
+      globalState.container = container;
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const TestApp(child: TrayManager(child: SizedBox.shrink())),
+        ),
+      );
+      await tester.pump();
+      final before = _RecordingSystemAction.updateTrayCount;
+      answer.complete(
+        const IpQuality(
+          ip: '2.2.2.2',
+          source: IpQualitySource.identMe,
+          type: IpType.residential,
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(_RecordingSystemAction.updateTrayCount, greaterThan(before));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+      expect(released, isTrue);
+    },
+    skip: !Platform.isMacOS,
+  );
 
   void emitTrayEvent(TraySignalKind kind) {
     trayHost.emit(kind);

@@ -1,135 +1,72 @@
-<div align="center">
+# Klash
 
-<img src="assets/images/icon.png" alt="FlClash" width="88">
+[English](README.md)
 
-# FlClash
+![Klash 应用图标](macos/Runner/Assets.xcassets/AppIcon.appiconset/app_icon_128.png)
 
-基于 ClashMeta 的多平台代理客户端，简单易用，开源无广告。
+Klash 原名 Flash，是 CodeAIX 维护的 [FlClash](https://github.com/chen08209/FlClash) 非官方衍生客户端。保留上游内核、配置、订阅、分流和节点操作，增加 macOS 状态栏出口监测。Klash 不提供节点或订阅服务。原 GPL-3.0 许可和上游署名保留，见 [KLASH-NOTICE.md](KLASH-NOTICE.md)。
 
-[English](README.md) · **简体中文**
+## 下载与更名迁移
 
-[![Release](https://img.shields.io/github/v/release/chen08209/FlClash?style=flat-square&label=release)](https://github.com/chen08209/FlClash/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/chen08209/FlClash/total?style=flat-square&logo=github)](https://github.com/chen08209/FlClash/releases)
-[![License](https://img.shields.io/github/license/chen08209/FlClash?style=flat-square)](LICENSE)
-[![Telegram](https://img.shields.io/badge/Telegram-channel-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://t.me/FlClash)
+从 [Klash Releases](https://github.com/CodeAIX/Klash/releases/latest) 下载：Apple Silicon 选择 **arm64**，Intel 选择 **x86_64**。将 DMG 中的 **Klash.app** 拖入 Applications。采用 ad-hoc 签名，尚未公证；每个二进制包附准确对应源码、固定 Core/prism_ui 子模块源码、版本记录和 SHA256SUMS。
 
-[官网](https://chen08209.github.io/FlClash/zh) · [下载](#下载) · [更新日志](CHANGELOG.md) · [从源码构建](#从源码构建)
+Klash 1.9.5 候选版 的构建号为 **2026112601**，包标识为 **com.codeaix.klash**，使用独立的数据目录和权限身份。迁移时先在 Flash 导出本地备份，切换网络客户端前退出 Flash，再在 Klash 恢复备份。不会自动复制活动数据库或覆盖旧数据，监测目标可能需要重新选择。本版不会自动替换已安装的 Flash。历史 Flash Release 和原安装包文件名继续保留。
 
-</div>
+新的 WebDAV 备份写入 **/Klash/&lt;文件名&gt;**，默认 backup.zip。恢复按 /Klash、/Flash、/FlClash 顺序读取同一文件名，并保留服务器基础路径；仅在 HTTP 404/409 时回退，鉴权和其他错误直接保留。旧文件只读，不修改、不删除。连通性测试成功不代表备份文件已存在。
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="snapshots/preview-dark.png">
-    <img alt="FlClash 在 MacBook 与手机上的仪表盘" src="snapshots/preview.png" width="92%">
-  </picture>
-</p>
+## 状态栏图例
 
-## 功能
+保留白底、翡翠绿到薄荷绿渐变应用图标，以及原 macOS 底板的圆角曲率、边距和投影。图源和生成方法见 [klash/branding](klash/branding)。
 
-- **一个应用覆盖 Android、Windows、macOS 和 Linux**，桌面端同时提供 x64 与 ARM64 版本。
-- **mihomo（Clash.Meta）内核**：规则分流、代理组、延迟测试、系统代理与 TUN 模式。
-- **配置管理**：通过订阅链接或文件导入配置，内置编辑器，支持覆写脚本以及自定义规则、代理和代理组。
-- **实时查看**连接、请求、DNS 查询和日志。
-- **Material You 设计，融合 Apple 式交互**：支持动态取色、浅色与深色主题，连续曲率圆角，弹出面板可在几档高度间吸附，布局随屏幕从手机到桌面自适应。
-- **备份与恢复**：通过 WebDAV 或本地文件。
-- **平台细节**：Android 上有快捷设置磁贴、分应用代理和 Android TV 支持；桌面端有托盘菜单和全局快捷键。
-- **开源无广告**，以 GPL-3.0 协议发布。
+状态栏徽标仍为 26 × 18 pt 柔和圆角矩形，国家码加大加粗。**底色看入口配置，字色看 IP 质量。**
 
-## 下载
+![深浅外观状态栏图例](klash/images/status-legend.png)
 
-从 [GitHub Releases](https://github.com/chen08209/FlClash/releases/latest) 获取最新版本，或打开
-[官网](https://chen08209.github.io/FlClash/zh#download)，它会自动为你的设备选好安装包。
-
-| 平台 | 安装包 | 说明 |
-| --- | --- | --- |
-| Android | `arm64`（arm64-v8a）、`armv7`（armeabi-v7a）、`amd64`（x86_64）三种 APK | 绝大多数手机选 `arm64`。也可以通过下方的 F-Droid 仓库安装。 |
-| Windows 10 及以上 | 安装版（`.exe`）或便携版（`.zip`），分 x64 与 ARM64 | 骁龙等 ARM 架构笔记本选 ARM64。 |
-| macOS 12 及以上 | Apple Silicon 与 Intel 两种 DMG | 也可以通过 Homebrew 安装。 |
-| Linux | `.deb`、`.rpm` 和 AppImage，分 x64 与 ARM64 | 托盘依赖见下方说明。 |
-
-<p>
-  <a href="https://chen08209.github.io/FlClash-fdroid-repo/repo?fingerprint=789D6D32668712EF7672F9E58DEEB15FBD6DCEEC5AE7A4371EA72F2AAE8A12FD"><img alt="Get it on F-Droid" src="snapshots/get-it-on-fdroid.svg" height="56"></a>
-  <a href="https://github.com/chen08209/FlClash/releases/latest"><img alt="Get it on GitHub" src="snapshots/get-it-on-github.svg" height="56"></a>
-</p>
-
-**Homebrew**
-
-```bash
-brew tap chen08209/tap
-brew install --cask flclash
-```
-
-**macOS 首次打开**
-
-应用未经 Apple 公证，macOS 第一次会拒绝打开。拖进“应用程序”后运行
-`xattr -dr com.apple.quarantine /Applications/FlClash*.app`，或在“系统设置 > 隐私与安全性”里点“仍要打开”。之后的更新在应用内直接安装。
-
-**Linux 托盘图标**
-
-托盘图标是 StatusNotifierItem。KDE Plasma、XFCE 和多数面板直接显示；GNOME 需要安装 AppIndicator and KStatusNotifierItem Support 扩展。
-
-**无人值守的桌面环境**
-
-FlClash 要在免责声明被接受后才会启动核心。在容器等无人点击的环境里，可在应用的环境变量中设置
-`FLCLASH_ACCEPT_DISCLAIMER=1`，首次启动时即视为接受。
-
-## 使用
-
-**通过链接导入配置。** 打开下面格式的链接，即可把订阅导入 FlClash。`clashmeta://` 和 `flclash://` 开头的链接同样可用。
-
-```text
-clash://install-config?url=<经过 URL 编码的订阅链接>
-```
-
-**Android 自动化。** Tasker、MacroDroid 等应用可以用下面的 Action 启动 Activity，从而启动、停止或切换代理：
-
-```text
-com.follow.clash.action.START
-com.follow.clash.action.STOP
-com.follow.clash.action.TOGGLE
-```
-
-在电脑上也可以通过 adb 触发：
-
-```bash
-adb shell am start -a com.follow.clash.action.TOGGLE
-```
-
-## 从源码构建
-
-需要 [Flutter](https://docs.flutter.dev/get-started/install) 3.50（正式版构建使用 3.50.1）、[Go](https://go.dev/dl/) 1.27，
-以及通过 rustup 安装的 [Rust](https://rustup.rs/)。桌面端需要在对应系统上构建，Android 在任意系统上都能构建。
-
-```bash
-git clone --recursive https://github.com/chen08209/FlClash.git
-cd FlClash
-flutter pub get
-dart run tool/package.dart android   # 或 windows、macos、linux
-```
-
-安装包输出到 `dist/`。Go 内核和 Rust 库会在 Flutter 构建过程中一并编译。
-
-| 平台 | 额外依赖 |
+| 底色或符号 | 含义 |
 | --- | --- |
-| Android | 带 NDK 的 Android SDK。加上 `--arch arm64` 可以只构建单个 ABI。 |
-| Windows | 编译内核用的 GCC（MinGW-w64），以及打包安装程序用的 [Inno Setup](https://jrsoftware.org/isinfo.php) 6。 |
-| macOS | Xcode 与 Node.js。脚本会通过 npm 安装 `appdmg`。 |
-| Linux | Debian 或 Ubuntu。脚本会用 apt 安装构建所需的软件包，并下载 `appimagetool`。 |
+| 绿色 | TUN 已配置开启，优先于系统代理 |
+| 蓝色 | TUN 关闭，仅系统代理已配置开启 |
+| 橙色 | 两种入口均未配置开启 |
+| 灰底原版风格 Logo | 内核停止或暂停，隐藏国家码 |
+| 中性底红色 F | 出口查询失败；F 保留为故障标识 |
 
-其余选项可以运行 `dart run tool/package.dart --help` 查看，例如用 `--targets` 只构建部分安装包格式，用 `--dry-run` 列出这次会生成的文件。
+| 国家码字色或内容 | 含义 |
+| --- | --- |
+| 白色 | 此 IP 内嵌评级为优秀，IpQualityLevel.good |
+| 黑色 | 其他、未知、查询中或查询失败 |
+| -- | 国家未知 |
 
-## 支持
+例如绿底白字 US 表示 TUN 开启、美国出口、质量优秀；蓝底黑字 JP 表示仅系统代理、日本出口、其他或未知质量。入口均关闭时单次查询仍可能成功，不代表所有应用使用同一出口。住宅、移动和企业类型通常为优秀，Tor/滥用标记优先降低评级，机房不算优秀。旧 IP 结果不会让新 IP 变白。显示优先级为停止/暂停、出口失败、正常国家码。
 
-给仓库点一个 Star 是支持项目最简单的方式。问题讨论和更新通知请关注 [Telegram 频道](https://t.me/FlClash)，
-Bug 与功能建议请提交到 [GitHub Issues](https://github.com/chen08209/FlClash/issues)。
+修订 3 在绘制回调外预先准备有限字符的字形路径，重绘只填充路径，不再执行 NSString 文字排版，绕开已观测到的 CoreText 崩溃链。按旧版 12.5pt Heavy 外观校准字重和基线，缺字准备失败显示可见 Logo。只缓存 A–Z 和短横线。绘制压力测试通过仍不能代替长期运行、睡眠唤醒和显示器切换验收。
 
-<a href="https://star-history.com/#chen08209/FlClash&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=chen08209/FlClash&type=Date&theme=dark">
-    <img alt="Star history" src="https://api.star-history.com/svg?repos=chen08209/FlClash&type=Date" width="640">
-  </picture>
-</a>
+## 独立监测按钮
 
-## 许可证
+在原版组或节点行、延迟数字左侧使用独立 ◎。当前目标实心标记常驻，其他按钮随行高亮出现；左侧 ✓ 仍表示代理选择。点击名称保持原版节点切换，组箭头照常展开，◎ 只设置监测对象。
 
-FlClash 以 [GPL-3.0 协议](LICENSE)发布。
+支持手动组、其成员中的嵌套自动组和具体节点。选择组时跟随当前实际出口，选择具体节点则不受其他组切换影响。底部“监测选项”显示目标、恢复按分流规则，并可刷新出口和质量；支持高亮后 Option+Return 及命名无障碍操作。
+
+目标本机保存，运行期间每 60 秒刷新出口，切换目标立即刷新；质量按 IP 缓存 3 天，手动刷新使缓存失效。目标消失时保持不可用，不静默切换。负载均衡组可能每次请求使用不同出口，图标仅代表该次探测，不代表所有流量或 AI 服务可用。
+
+## 与上游的关系和独立补丁
+
+本版基于 **FlClash v0.9.5**，保留绿色图标、徽标语义、后台监测、正式渠道和文件选择读写权限。上游内部模块、Core 可执行文件和 IPC 协议名继续作为兼容实现保留，不是产品身份。暂不发布 Klash 的 Windows 和 Android 版本。
+
+版本为上游 major 加 1、minor/patch 不变：0.9.5 → 1.9.5、0.10.0 → 1.10.0。同一上游修订使用递增构建号，例如 v1.9.3+2026110601，应用短版本仍为 1.9.3。固定版本见 [klash/upstream.json](klash/upstream.json)。
+
+[独立补丁](klash/runtime.patch)和显式文件清单从固定上游重建定制。每日检查正式上游，冲突即停止；兼容候选须通过分析、回归、原生菜单/字形测试和双架构构建才合并发布。上游改动仍可能需要人工适配。工作流历史文件名保留以维持调度身份，显示名称和产物已使用 Klash。
+
+## 构建
+
+当前 CI 固定 Flutter 3.50.1、Go 1.27.1、Xcode 26 SDK，构建钩子还需要 Rust。
+
+~~~sh
+git clone --recursive https://github.com/CodeAIX/Klash.git
+cd Klash
+flutter pub get
+flutter build macos --release --dart-define=KLASH_STATUS_ICON=true --dart-define=APP_ENV=stable
+~~~
+
+本机开发使用 --dart-define=SAFE_MODE=true，避免接管现用网络。KLASH_STATUS_ICON=false 可恢复上游模板托盘图标。详见[补丁维护说明](klash/README.md)。
+
+1.9.5 候选版已接续 FlClash 0.9.5，原生桥接和验证边界见 [开发指南](klash/DEVELOPMENT.md)。正式发布前，最新已发布版本仍为 1.9.3+2026111003。

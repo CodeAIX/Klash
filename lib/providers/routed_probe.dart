@@ -114,6 +114,8 @@ mixin RoutedProbe<K, V>
   @protected
   bool isFailure(V value) => false;
 
+  bool get runsInBackground => false;
+
   @protected
   bool get recheckFailures => false;
 
@@ -264,7 +266,9 @@ mixin RoutedProbe<K, V>
 
   void _launch() {
     _scheduled = false;
-    if (!ref.mounted || !_route.live || !ref.read(appVisibleProvider)) {
+    if (!ref.mounted ||
+        !_route.live ||
+        (!runsInBackground && !ref.read(appVisibleProvider))) {
       return;
     }
     final route = _route;
@@ -585,7 +589,9 @@ mixin RoutedProbe<K, V>
       _reverify = true;
       return;
     }
-    if (!ref.mounted || !_route.live || !ref.read(appVisibleProvider)) {
+    if (!ref.mounted ||
+        !_route.live ||
+        (!runsInBackground && !ref.read(appVisibleProvider))) {
       return;
     }
     final stamps = <K, RouteStamp>{};

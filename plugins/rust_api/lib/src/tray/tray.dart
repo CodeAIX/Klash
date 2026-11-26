@@ -204,9 +204,11 @@ final class Tray {
           return;
         }
         switch (item) {
-          case TrayMenuAction(:final onSelected):
+          case TrayMenuAction(:final onSelected, :final enabled):
+            if (!enabled) return;
             onSelected?.call();
-          case TrayMenuCheckbox(:final onSelected):
+          case TrayMenuCheckbox(:final onSelected, :final enabled):
+            if (!enabled) return;
             onSelected?.call();
           case TrayMenuSubmenu():
           case TrayMenuSeparator():
@@ -246,7 +248,16 @@ final class Tray {
         TargetPlatform.linux => _largestBundledVariant(icon.asset),
         _ => _bundledPath(icon.asset),
       },
-      pngs: isMacOS ? await _loadVariants(icon.asset) : const [],
+      pngs: isMacOS && icon.country == null
+          ? await _loadVariants(icon.asset)
+          : const [],
+      badge: icon.country == null
+          ? null
+          : TrayBadge(
+              country: icon.country!,
+              status: icon.status ?? 'unknown',
+              highQuality: icon.isHighQuality,
+            ),
       template: icon.isTemplate,
       size: icon.size,
       placement: switch (icon.position) {
