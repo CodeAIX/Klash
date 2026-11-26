@@ -17,7 +17,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/route_state.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tray/tray.dart';
+import 'package:rust_api/tray.dart';
 
 class TrayManager extends ConsumerStatefulWidget {
   final Widget child;

@@ -3,7 +3,7 @@ import 'package:fl_clash/providers/ip_quality.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/common/klash_monitor.dart';
-import 'package:fl_clash/l10n/l10n.dart';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
@@ -13,7 +13,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    await AppLocalizations.load(const Locale('en'));
+    loadAppLocalizations(const Locale('en'));
   });
 
   test(

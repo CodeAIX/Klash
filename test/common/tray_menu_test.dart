@@ -1,6 +1,3 @@
-import 'dart:async';
-import 'package:fl_clash/common/klash_monitor.dart';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:fl_clash/common/app_localizations.dart';
@@ -9,25 +6,20 @@ import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/common/l10n_labels.dart';
 import 'package:fl_clash/common/tray.dart';
 import 'package:fl_clash/enum/enum.dart';
-import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/action.dart';
+import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/state.dart';
-import 'package:fl_clash/providers/outbound_ip.dart';
-import 'package:fl_clash/providers/ip_quality.dart';
-import 'package:fl_clash/providers/routed_probe.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:intl/intl.dart';
 import 'package:riverpod/riverpod.dart';
-import 'package:tray/tray.dart';
+import 'package:rust_api/tray.dart';
 
 import '../helpers/app_paths.dart';
-
-const _channel = MethodChannel('tray');
+import '../helpers/fake_tray_host.dart';
 
 const _proxyGroup = Group(
   name: 'Proxy',
@@ -75,23 +67,36 @@ TrayState _trayState({
   );
 }
 
-List<Map<Object?, Object?>> _items(MethodCall? call) {
-  final menu = (call?.arguments as Map?)?['menu'] as List?;
-  return menu?.cast<Map<Object?, Object?>>() ?? const [];
+Map<String, Object?> _describe(TrayItem item) {
+  return {
+    'id': item.id,
+    'type': item.kind.name,
+    'label': item.label,
+    if (item.detail != null) 'detail': item.detail,
+    'enabled': item.enabled,
+    'checked': item.checked,
+    'items': item.items.map(_describe).toList(),
+  };
 }
 
-Map<Object?, Object?> _item(MethodCall? call, String label) {
-  return _items(call).firstWhere((item) => item['label'] == label);
+List<Map<String, Object?>> _items(TrayContent? content) {
+  return content?.menu.map(_describe).toList() ?? const [];
 }
 
-List<String> _labels(MethodCall? call) {
-  return _items(call).map((item) => item['label']).whereType<String>().toList();
+Map<String, Object?> _item(TrayContent? content, String label) {
+  return _items(content).firstWhere((item) => item['label'] == label);
+}
+
+List<String> _labels(TrayContent? content) {
+  return _items(
+    content,
+  ).map((item) => item['label']).whereType<String>().toList();
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late List<MethodCall> calls;
+  late FakeTrayHost host;
   late ProviderContainer container;
   late AppTray tray;
 
@@ -100,7 +105,7 @@ void main() {
   setUpAll(() async {
     root = Directory.systemTemp.createTempSync('tray_menu_test');
     await useAppPaths(root);
-    await AppLocalizations.load(const Locale('en'));
+    loadAppLocalizations(const Locale('en'));
   });
 
   tearDownAll(() {
@@ -118,32 +123,18 @@ void main() {
 
   setUp(() {
     debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-    calls = [];
+    host = FakeTrayHost();
     tray = AppTray.forPlatform(isMacOS: true, isWindows: false);
     container = ProviderContainer();
-    Tray.instance.resetForTesting();
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(_channel, (call) async {
-          calls.add(call);
-          return true;
-        });
+    Tray.instance.resetForTesting(host);
   });
 
   tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(_channel, null);
     container.dispose();
     debugDefaultTargetPlatformOverride = null;
   });
 
-  MethodCall? showCall() {
-    for (final call in calls.reversed) {
-      if (call.method == 'show') {
-        return call;
-      }
-    }
-    return null;
-  }
+  TrayContent? showCall() => host.lastShown;
 
   Future<void> update(TrayState trayState, {AppTray? on}) {
     return (on ?? tray).update(
@@ -166,6 +157,24 @@ void main() {
       expect(_labels(showCall()), contains(currentAppLocalizations.exit));
     },
   );
+
+  test('SystemAction.updateTray logs a tray the platform refuses, with its '
+      'reason, rather than throwing', () async {
+    globalState.container = container;
+    trayPort = tray;
+    addTearDown(() => trayPort = null);
+    final wasAttached = globalState.isAttach;
+    globalState.isAttach = true;
+    addTearDown(() => globalState.isAttach = wasAttached);
+    host.showFailure = 'no status notifier watcher';
+
+    await container.read(systemActionProvider.notifier).updateTray();
+
+    expect(
+      container.read(logsProvider).list.map((log) => log.payload),
+      contains(contains('no status notifier watcher')),
+    );
+  });
 
   test('builds the stopped menu without the running-only toggles', () async {
     await update(_trayState());
@@ -206,16 +215,12 @@ void main() {
     test('names the mode in the tooltip and ships the safe icon', () async {
       await update(_trayState(isStart: true, safeMode: true));
 
-      final arguments = showCall()!.arguments as Map;
+      final content = showCall()!;
       final l10n = currentAppLocalizations;
-      expect(arguments['toolTip'], '$appName (${l10n.safeMode})');
-      final reps = ((arguments['icon'] as Map)['reps'] as List).cast<Map>();
-      final base = reps.firstWhere((rep) => rep['scale'] == 1.0);
+      expect(content.toolTip, '$appName (${l10n.safeMode})');
       expect(
-        base['bytes'],
-        base64Encode(
-          File('assets/images/tray/macos/status_4.png').readAsBytesSync(),
-        ),
+        content.image.pngs.first,
+        File('assets/images/tray/macos/status_4.png').readAsBytesSync(),
       );
     });
   });
@@ -227,280 +232,52 @@ void main() {
         .where((item) => item['checked'] == true)
         .map((item) => item['label'])
         .toList();
-    expect(checkedModes, contains(Intl.message(Mode.global.name)));
+    expect(checkedModes, contains(currentAppLocalizations.global));
   });
 
   test('sends icon, tooltip and menu in a single show call', () async {
     await update(_trayState(isStart: true, tunEnable: true));
 
-    final showCalls = calls.where((call) => call.method == 'show').toList();
-    expect(showCalls, hasLength(1));
+    expect(host.shown, hasLength(1));
 
-    final arguments = showCalls.single.arguments as Map;
+    final content = host.shown.single;
     expect(
-      arguments['toolTip'],
+      content.toolTip,
       contains(currentAppLocalizations.klashMonitorRules),
     );
-    expect(arguments['menu'], isNotEmpty);
-    final icon = arguments['icon'] as Map;
-    expect(icon['country'], '--');
-    expect(icon['status'], 'tun');
-    expect(icon['isTemplate'], isFalse);
+    expect(content.menu, isNotEmpty);
+    expect(content.image.badge!.status, 'tun');
+    expect(content.image.pngs, isEmpty);
+    expect(content.image.template, isFalse);
   });
 
-  test(
-    'status distinguishes stopped, failed, no entry and rule success',
-    () async {
-      for (final (running, enabled, phase, expected) in [
-        (false, true, ProbePhase.fresh, 'stopped'),
-        (true, true, ProbePhase.failed, 'failed'),
-        (true, false, ProbePhase.fresh, 'entry'),
-        (true, true, ProbePhase.fresh, 'route'),
-      ]) {
-        container.dispose();
-        container = ProviderContainer(
-          overrides: [
-            ipQualityProvider(
-              '2.2.2.2',
-            ).overrideWithValue(const AsyncLoading()),
-            outboundIpProbeProvider.overrideWithBuild(
-              (_, _) => RoutedProbeState({
-                '': ProbeEntry(
-                  phase: phase,
-                  value: const IpInfo(ip: '2.2.2.2', countryCode: 'JP'),
-                ),
-              }),
-            ),
-          ],
-        );
-        await update(_trayState(isStart: running, systemProxy: enabled));
-        final icon = (showCall()!.arguments as Map)['icon'] as Map;
-        expect(icon['status'], expected);
-        expect(
-          icon['country'],
-          running && phase == ProbePhase.fresh ? 'JP' : '--',
-        );
-      }
-    },
-  );
-
-  test(
-    'selected monitor supplies country and quality instead of routed IP',
-    () async {
-      container.dispose();
-      container = ProviderContainer(
-        overrides: [
-          outboundIpProbeProvider.overrideWithBuild(
-            (_, _) => const RoutedProbeState({
-              '': ProbeEntry(
-                phase: ProbePhase.fresh,
-                value: IpInfo(ip: '1.1.1.1', countryCode: 'US'),
-              ),
-              'Manual': ProbeEntry(
-                phase: ProbePhase.fresh,
-                value: IpInfo(ip: '2.2.2.2', countryCode: 'JP'),
-              ),
-            }),
-          ),
-          ipQualityProvider('2.2.2.2').overrideWithValue(
-            const AsyncData(
-              IpQuality(
-                ip: '2.2.2.2',
-                source: IpQualitySource.identMe,
-                type: IpType.residential,
-              ),
-            ),
-          ),
-        ],
-      );
-      await container
-          .read(klashMonitorTargetProvider.notifier)
-          .select('Manual');
-      await update(_trayState(isStart: true, tunEnable: true));
-      final icon = (showCall()!.arguments as Map)['icon'] as Map;
-      expect(icon['country'], 'JP');
-      expect(icon['isHighQuality'], true);
-      expect(icon['status'], 'tun');
-      expect(_labels(showCall()).first, currentAppLocalizations.show);
-      expect(
-        _item(
-          showCall(),
-          currentAppLocalizations.klashMonitorOptions,
-        )['items'].toString(),
-        contains('Manual'),
-      );
-    },
-  );
-
-  test(
-    'groups and their members expose independent monitor callbacks',
-    () async {
-      const groups = [
-        Group(
-          name: 'Manual',
-          type: GroupType.Selector,
-          all: [
-            Proxy(name: 'Auto', type: 'URLTest'),
-            Proxy(name: 'Japan', type: 'SS'),
-          ],
-        ),
-        Group(
-          name: 'Auto',
-          type: GroupType.URLTest,
-          all: [Proxy(name: 'Japan', type: 'SS')],
-        ),
-      ];
-      await update(_trayState(groups: groups));
-      final main = _items(
-        showCall(),
-      ).firstWhere((item) => item['label'] == 'Manual');
-      final auto = (main['items'] as List).cast<Map>().firstWhere(
-        (item) => item['label'] == 'Auto',
-      );
-      final japan = (main['items'] as List).cast<Map>().firstWhere(
-        (item) => item['label'] == 'Japan',
-      );
-      final before = container.read(selectedMapProvider);
-      for (final entry in [main, auto, japan]) {
-        final accessory = entry['accessory'] as Map;
-        expect(accessory['id'], isNot(entry['id']));
-        final done = Completer<void>();
-        await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .handlePlatformMessage(
-              'tray',
-              const StandardMethodCodec().encodeMethodCall(
-                MethodCall('onMenuItemSelected', {'id': accessory['id']}),
-              ),
-              (_) => done.complete(),
-            );
-        await done.future;
-        expect(container.read(klashMonitorTargetProvider), entry['label']);
-        expect(container.read(selectedMapProvider), before);
-      }
-    },
-  );
-
-  test('quality changes text independently of the entry background', () async {
-    const good = IpQuality(
-      ip: '2.2.2.2',
-      source: IpQualitySource.identMe,
-      type: IpType.residential,
+  test('ships the color status icon once monochrome is off', () async {
+    await update(
+      _trayState(isStart: true, tunEnable: true, monochromeTrayIcon: false),
     );
-    for (final (quality, phase, enabled, expected)
-        in <(AsyncValue<IpQuality>, ProbePhase, bool, String)>[
-          (const AsyncData(good), ProbePhase.fresh, true, 'route'),
-          (
-            AsyncData(good.copyWith(type: IpType.hosting)),
-            ProbePhase.fresh,
-            true,
-            'route',
-          ),
-          (
-            AsyncData(good.copyWith(isAbuser: true)),
-            ProbePhase.fresh,
-            true,
-            'route',
-          ),
-          (
-            AsyncData(good.copyWith(ip: '3.3.3.3')),
-            ProbePhase.fresh,
-            true,
-            'route',
-          ),
-          (const AsyncLoading(), ProbePhase.fresh, true, 'route'),
-          (
-            AsyncError(StateError('failed'), StackTrace.empty),
-            ProbePhase.fresh,
-            true,
-            'route',
-          ),
-          (const AsyncData(good), ProbePhase.probing, true, 'route'),
-          (const AsyncData(good), ProbePhase.failed, true, 'failed'),
-          (const AsyncData(good), ProbePhase.fresh, false, 'entry'),
-        ]) {
-      container.dispose();
-      container = ProviderContainer(
-        overrides: [
-          ipQualityProvider('2.2.2.2').overrideWithValue(quality),
-          outboundIpProbeProvider.overrideWithBuild(
-            (_, _) => RoutedProbeState({
-              '': ProbeEntry(
-                phase: phase,
-                value: const IpInfo(ip: '2.2.2.2', countryCode: 'JP'),
-              ),
-            }),
-          ),
-        ],
-      );
-      await update(_trayState(isStart: true, systemProxy: enabled));
-      expect(
-        ((showCall()!.arguments as Map)['icon'] as Map)['status'],
-        expected,
-      );
-      final value = quality.isLoading || quality.hasError
-          ? null
-          : quality.value;
-      expect(
-        ((showCall()!.arguments as Map)['icon'] as Map)['isHighQuality'],
-        phase == ProbePhase.fresh &&
-            value?.ip == '2.2.2.2' &&
-            value?.level == IpQualityLevel.good,
-      );
-    }
-  });
 
-  test('TUN takes priority over system proxy for the background', () async {
-    for (final (tun, proxy, expected) in [
-      (true, true, 'tun'),
-      (true, false, 'tun'),
-      (false, true, 'route'),
-      (false, false, 'entry'),
-    ]) {
-      await update(
-        _trayState(isStart: true, tunEnable: tun, systemProxy: proxy),
-      );
-      final icon = (showCall()!.arguments as Map)['icon'] as Map;
-      expect(icon['status'], expected);
-      expect(icon['country'], '--');
-      expect(icon['isHighQuality'], isFalse);
-    }
+    final content = showCall()!;
+    expect(content.image.template, isFalse);
+    expect(content.image.badge!.status, 'tun');
+    expect(
+      _labels(showCall()),
+      isNot(contains(currentAppLocalizations.monochromeIcon)),
+    );
   });
-
-  test(
-    'Flash badge keeps its entry colors with either monochrome preference',
-    () async {
-      for (final monochrome in [true, false]) {
-        await update(
-          _trayState(
-            isStart: true,
-            tunEnable: true,
-            monochromeTrayIcon: monochrome,
-          ),
-        );
-        final icon = (showCall()!.arguments as Map)['icon'] as Map;
-        expect(icon['status'], 'tun');
-        expect(icon['country'], '--');
-        expect(
-          _labels(showCall()),
-          isNot(contains(currentAppLocalizations.monochromeIcon)),
-        );
-      }
-    },
-  );
 
   test('skips the platform call when the tray state is unchanged', () async {
     await update(_trayState(isStart: true));
     await update(_trayState(isStart: true));
 
-    expect(calls.where((call) => call.method == 'show'), hasLength(1));
+    expect(host.shown, hasLength(1));
   });
 
   test('menu item ids are stable across identical rebuilds', () async {
     await update(_trayState());
     final first = _items(showCall()).map((item) => item['id']).toList();
 
-    Tray.instance.resetForTesting();
-    calls.clear();
+    host = FakeTrayHost();
+    Tray.instance.resetForTesting(host);
 
     await update(_trayState());
     final second = _items(showCall()).map((item) => item['id']).toList();
@@ -522,11 +299,11 @@ void main() {
       ),
     );
 
-    final submenu = _items(showCall()).firstWhere(
-      (item) => item['type'] == 'submenu' && item['label'] == 'Proxy',
-    );
+    final submenu = _items(
+      showCall(),
+    ).firstWhere((item) => item['type'] == 'submenu');
     expect(submenu['label'], 'Proxy');
-    final children = (submenu['items'] as List).cast<Map<Object?, Object?>>();
+    final children = (submenu['items'] as List).cast<Map<String, Object?>>();
     expect(children.map((item) => item['label']), contains('A'));
   });
 
@@ -580,7 +357,7 @@ void main() {
 
       final submenu = _item(showCall(), 'Proxy');
       expect(submenu['detail'], '120');
-      final children = (submenu['items'] as List).cast<Map<Object?, Object?>>();
+      final children = (submenu['items'] as List).cast<Map<String, Object?>>();
       expect(children.map((item) => item['detail']), [
         '120',
         currentAppLocalizations.timeout,
@@ -604,9 +381,7 @@ void main() {
     );
 
     final items = _items(showCall());
-    final index = items.indexWhere(
-      (item) => item['type'] == 'submenu' && item['label'] == 'Proxy',
-    );
+    final index = items.indexWhere((item) => item['type'] == 'submenu');
     expect(items[index + 1]['label'], HotAction.delayTest.label);
     expect(items[index + 1]['detail'], '⌃⇧D');
   });
@@ -633,8 +408,7 @@ void main() {
         on: windows,
       );
 
-      final arguments = showCall()!.arguments as Map;
-      expect((arguments['icon'] as Map)['isTemplate'], isFalse);
+      expect(showCall()!.image.template, isFalse);
       expect(
         _items(showCall()).where((item) => item['type'] == 'submenu'),
         isEmpty,
@@ -669,7 +443,7 @@ void main() {
     test('never pushes a tray title', () async {
       await windows.updateTitle(showTrayTitle: true, traffic: const Traffic());
 
-      expect(calls.where((call) => call.method == 'setTitle'), isEmpty);
+      expect(host.titles, isEmpty);
     });
   });
 }

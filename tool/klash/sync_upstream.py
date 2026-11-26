@@ -48,7 +48,7 @@ def main():
     manifest = json.loads((ROOT / 'klash/upstream.json').read_text())
     paths = (ROOT / 'klash/runtime-paths.txt').read_text().splitlines()
     if args.validate_overlay:
-        changed = set(run('git', 'diff', '--name-only', manifest['commit'], '--', 'lib', 'macos', 'plugins/tray', 'test', 'arb', 'assets/images/icon.png').stdout.splitlines())
+        changed = set(run('git', 'diff', '--name-only', manifest['commit'], '--', 'lib', 'macos', 'plugins/rust_api', 'test', 'arb', 'assets/images/icon.png').stdout.splitlines())
         missing = changed.difference(paths)
         if missing:
             raise RuntimeError(f'Runtime changes missing from the overlay path list: {sorted(missing)}')

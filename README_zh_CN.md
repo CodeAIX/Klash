@@ -10,7 +10,7 @@ Klash 原名 Flash，是 CodeAIX 维护的 [FlClash](https://github.com/chen0820
 
 从 [Klash Releases](https://github.com/CodeAIX/Klash/releases/latest) 下载：Apple Silicon 选择 **arm64**，Intel 选择 **x86_64**。将 DMG 中的 **Klash.app** 拖入 Applications。采用 ad-hoc 签名，尚未公证；每个二进制包附准确对应源码、固定 Core/prism_ui 子模块源码、版本记录和 SHA256SUMS。
 
-Klash 1.9.3 修订 3 的构建号为 **2026110601**，包标识为 **com.codeaix.klash**，使用独立的数据目录和权限身份。迁移时先在 Flash 导出本地备份，切换网络客户端前退出 Flash，再在 Klash 恢复备份。不会自动复制活动数据库或覆盖旧数据，监测目标可能需要重新选择。本版不会自动替换已安装的 Flash。历史 Flash Release 和原安装包文件名继续保留。
+Klash 1.9.5 候选版 的构建号为 **2026112601**，包标识为 **com.codeaix.klash**，使用独立的数据目录和权限身份。迁移时先在 Flash 导出本地备份，切换网络客户端前退出 Flash，再在 Klash 恢复备份。不会自动复制活动数据库或覆盖旧数据，监测目标可能需要重新选择。本版不会自动替换已安装的 Flash。历史 Flash Release 和原安装包文件名继续保留。
 
 新的 WebDAV 备份写入 **/Klash/&lt;文件名&gt;**，默认 backup.zip。恢复按 /Klash、/Flash、/FlClash 顺序读取同一文件名，并保留服务器基础路径；仅在 HTTP 404/409 时回退，鉴权和其他错误直接保留。旧文件只读，不修改、不删除。连通性测试成功不代表备份文件已存在。
 
@@ -50,15 +50,15 @@ Klash 1.9.3 修订 3 的构建号为 **2026110601**，包标识为 **com.codeaix
 
 ## 与上游的关系和独立补丁
 
-本版基于 **FlClash v0.9.3**，保留绿色图标、徽标语义、后台监测、正式渠道和文件选择读写权限。上游内部模块、Core 可执行文件和 IPC 协议名继续作为兼容实现保留，不是产品身份。暂不发布 Klash 的 Windows 和 Android 版本。
+本版基于 **FlClash v0.9.5**，保留绿色图标、徽标语义、后台监测、正式渠道和文件选择读写权限。上游内部模块、Core 可执行文件和 IPC 协议名继续作为兼容实现保留，不是产品身份。暂不发布 Klash 的 Windows 和 Android 版本。
 
-版本为上游 major 加 1、minor/patch 不变：0.9.3 → 1.9.3、0.10.0 → 1.10.0。同一上游修订使用递增构建号，例如 v1.9.3+2026110601，应用短版本仍为 1.9.3。固定版本见 [klash/upstream.json](klash/upstream.json)。
+版本为上游 major 加 1、minor/patch 不变：0.9.5 → 1.9.5、0.10.0 → 1.10.0。同一上游修订使用递增构建号，例如 v1.9.3+2026110601，应用短版本仍为 1.9.3。固定版本见 [klash/upstream.json](klash/upstream.json)。
 
 [独立补丁](klash/runtime.patch)和显式文件清单从固定上游重建定制。每日检查正式上游，冲突即停止；兼容候选须通过分析、回归、原生菜单/字形测试和双架构构建才合并发布。上游改动仍可能需要人工适配。工作流历史文件名保留以维持调度身份，显示名称和产物已使用 Klash。
 
 ## 构建
 
-当前 CI 固定 Flutter 3.47.6、Go 1.27.1、Xcode 26 SDK，构建钩子还需要 Rust。
+当前 CI 固定 Flutter 3.50.1、Go 1.27.1、Xcode 26 SDK，构建钩子还需要 Rust。
 
 ~~~sh
 git clone --recursive https://github.com/CodeAIX/Klash.git
@@ -68,3 +68,5 @@ flutter build macos --release --dart-define=KLASH_STATUS_ICON=true --dart-define
 ~~~
 
 本机开发使用 --dart-define=SAFE_MODE=true，避免接管现用网络。KLASH_STATUS_ICON=false 可恢复上游模板托盘图标。详见[补丁维护说明](klash/README.md)。
+
+1.9.5 候选版已接续 FlClash 0.9.5，原生桥接和验证边界见 [开发指南](klash/DEVELOPMENT.md)。正式发布前，最新已发布版本仍为 1.9.3+2026111003。

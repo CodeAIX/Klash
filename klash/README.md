@@ -17,7 +17,7 @@ Publishing requires both architecture jobs to succeed. A sync PR is merged only 
 
 If repository policy blocks Actions from creating PRs or merging them, enable the corresponding repository setting; failures stay visible in the sync run/PR. No external token is stored in source.
 
-macOS packaging currently pins Flutter 3.47.6 and Go 1.27.1 and chooses an installed Xcode 26 SDK. A future upstream toolchain or tray/provider API change can require manual adaptation. Windows/Android are not yet Klash release targets.
+macOS packaging currently pins Flutter 3.50.1 and Go 1.27.1 and chooses an installed Xcode 26 SDK. A future upstream toolchain or tray/provider API change can require manual adaptation. Windows/Android are not yet Klash release targets.
 
 ## v0.9.2 integration
 
@@ -34,3 +34,14 @@ Country paths are prepared once from the system monospaced Heavy font. The image
 Compile tool/klash/test_status_image.swift as /tmp/main.swift together with the production KlashStatusImage.swift to run the glyph test. Both Core and prism_ui sources are included in release archives.
 
 .github/workflows/flash-macos.yml and flash-upstream.yml remain stable dispatch IDs. Display names, metadata paths and artifacts use Klash.
+
+
+## v0.9.5 integration (2026-11-26)
+
+The pinned upstream is FlClash v0.9.5. Upstream moved tray/window ownership into `plugins/rust_api` and localization to Flutter gen-l10n. The overlay follows those owners; it does not restore the retired plugin packages.
+
+The macOS tray backend uses the reviewed Swift menu and precomputed glyph paths through a small C ABI bridge. Cargo builds those sources for its target architecture. Typed accessory IDs and badge fields travel through regenerated flutter_rust_bridge bindings. Ordinary menus retain the upstream Rust backend, while menus containing monitor controls use the Swift menu, including its Intel macOS 12–13 click handling. The native window module preserves active-Space behavior and screen-lock lifecycle reporting, adding Klash's hide-before-accessory and regular-before-show ordering.
+
+Klash's updater reads `SHA256SUMS` and its own macOS asset names (`arm64`, `x86_64`). Same-version repair checks include the installed build number. Monitoring targets and WebDAV legacy readers retain their existing keys/paths.
+
+Run `flutter gen-l10n` after editing ARB sources, `dart run build_runner build --delete-conflicting-outputs` after providers, and `flutter_rust_bridge_codegen generate` from `plugins/rust_api` after its Rust API changes. The bridge generator must match version 2.13.0. See [development commands](DEVELOPMENT.md).

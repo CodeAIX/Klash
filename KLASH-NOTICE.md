@@ -2,7 +2,7 @@
 
 Klash (formerly Flash) is an unofficial derivative of [FlClash](https://github.com/chen08209/FlClash), maintained by CodeAIX. Renamed and modified 2026-11-06. Exact upstream and application versions are recorded in klash/upstream.json; Core and prism_ui are pinned submodules with complete corresponding sources included in each release.
 
-The original GPL-3.0 LICENSE, copyright notices and third-party licenses remain. FlClash, mihomo, Flutter and all bundled projects retain attribution. The approved white-tile application icon recolors the original FlClash glyph with green gradients. Original per-size tile masks, margins and shadow remain in klash/branding with provenance hashes. No AiGuard source or artwork was copied. This revision does not change application icon artwork.
+The original GPL-3.0 LICENSE, copyright notices and third-party licenses remain. FlClash, mihomo, Flutter and all bundled projects retain attribution. The selected application icon has a green gradient background and two white diagonal bars with a dot. The approved per-size exports are preserved. Historical branding sources remain under klash/branding. No AiGuard source or artwork was copied. This revision does not change application icon artwork.
 
 The macOS product is Klash.app / com.codeaix.klash, with a debug suffix in Debug. Updates point to CodeAIX/Klash. Upstream internal Dart modules, private channel/IPC identifiers and the FlClashCore executable remain compatibility details. Windows and Android are not Klash distribution targets.
 

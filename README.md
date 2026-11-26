@@ -10,7 +10,7 @@ Klash, formerly Flash, is an unofficial derivative of [FlClash](https://github.c
 
 Download from [Klash Releases](https://github.com/CodeAIX/Klash/releases/latest): **arm64** for Apple Silicon, **x86_64** for Intel. Drag **Klash.app** from the DMG into Applications. Packages are ad-hoc signed and not notarized. Each binary includes its exact source archive with pinned Core/prism_ui, revision record and SHA256SUMS.
 
-Klash 1.9.3 revision 3 uses build **2026110601** and bundle ID **com.codeaix.klash**. Its data directory and permission identity are separate. Export a local backup from Flash, stop Flash before switching network clients, then restore the backup in Klash. No active database is automatically copied and no old data is overwritten. Select the monitored target again if needed. This release does not automatically replace your installed Flash. Historical Flash releases and their original filenames remain available.
+Klash 1.9.5 candidate uses build **2026112601** and bundle ID **com.codeaix.klash**. Its data directory and permission identity are separate. Export a local backup from Flash, stop Flash before switching network clients, then restore the backup in Klash. No active database is automatically copied and no old data is overwritten. Select the monitored target again if needed. This release does not automatically replace your installed Flash. Historical Flash releases and their original filenames remain available.
 
 New WebDAV backups use **/Klash/&lt;filename&gt;**, normally backup.zip. Restore tries /Klash, /Flash, then /FlClash, keeping the same filename and configured server base path. Only HTTP 404/409 advances to the next path; authentication and other errors remain errors. Old backup files are read without modifying or deleting them. A successful connectivity test does not prove that a backup exists.
 
@@ -50,15 +50,15 @@ Selection is saved locally. Exit IP refreshes every 60 seconds while running and
 
 ## Upstream and independent overlay
 
-This revision is based on **FlClash v0.9.3**. Klash retains the application artwork, badge semantics, background monitoring, stable channel and file-picker entitlements. Private upstream module, Core executable and IPC names remain compatibility details rather than product identity. Windows and Android are not Klash distribution targets.
+This revision is based on **FlClash v0.9.5**. Klash retains the application artwork, badge semantics, background monitoring, stable channel and file-picker entitlements. Private upstream module, Core executable and IPC names remain compatibility details rather than product identity. Windows and Android are not Klash distribution targets.
 
-Version mapping adds one to the upstream major and keeps minor/patch: 0.9.3 → 1.9.3, 0.10.0 → 1.10.0. Same-upstream revisions use build metadata such as v1.9.3+2026110601; the app short version remains 1.9.3. See [klash/upstream.json](klash/upstream.json).
+Version mapping adds one to the upstream major and keeps minor/patch: 0.9.5 → 1.9.5, 0.10.0 → 1.10.0. Same-upstream revisions use build metadata such as v1.9.3+2026110601; the app short version remains 1.9.3. See [klash/upstream.json](klash/upstream.json).
 
 The [independent patch](klash/runtime.patch) and explicit file list reconstruct customization from the pinned upstream. Daily stable-release checks stop on conflicts. Compatible candidates require analysis, regression tests, native menu/glyph checks and both macOS builds before merge/publication. Upstream changes may need manual adaptation. Historical workflow filenames remain stable dispatch IDs; their displayed names and artifacts use Klash.
 
 ## Build
 
-Current CI pins Flutter 3.47.6, Go 1.27.1 and Xcode 26 SDK; build hooks also require Rust.
+Current CI pins Flutter 3.50.1, Go 1.27.1 and Xcode 26 SDK; build hooks also require Rust.
 
 ~~~sh
 git clone --recursive https://github.com/CodeAIX/Klash.git
@@ -68,3 +68,5 @@ flutter build macos --release --dart-define=KLASH_STATUS_ICON=true --dart-define
 ~~~
 
 Use --dart-define=SAFE_MODE=true for host development so the test client does not take over the current network. KLASH_STATUS_ICON=false restores upstream template tray icons. See [overlay maintenance](klash/README.md).
+
+The 1.9.5 candidate follows FlClash 0.9.5. Its native bridge and validation status are documented in [klash/DEVELOPMENT.md](klash/DEVELOPMENT.md). The latest published release remains 1.9.3+2026111003 until a new release is approved.
